@@ -5,6 +5,7 @@
 #include "AbilitySystem/AuraAttributeSet.h"
 #include "AuraGameplayTags.h"
 
+//메뉴 위젯이 만들어질 때 초기값 설정 블루프린트에서 사용
 void UAttributeMenuWidgetController::BroadcastInitialValues()
 {
 	UAuraAttributeSet* AS = Cast<UAuraAttributeSet>(AttributeSet);
@@ -16,10 +17,12 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
 	}
 }
 
+//값이 바뀔 때 마다 어떻게 값을 넘겨주는가를 초기에 설정 / AuraHUD에서 사용
 void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
 	UAuraAttributeSet* AS = CastChecked<UAuraAttributeSet>(AttributeSet);
 	check(AttributeInfo);
+
 	for (auto& Pair : AS->TagsToAttributes)
 	{
 		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Value()).AddLambda(

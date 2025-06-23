@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+#include "GameplayTagContainer.h"
 /**
  * 싱글톤 패턴을 사용하여 네이티브 게임플레이 태그를 포함하는 구조체
  *
@@ -34,6 +34,14 @@ public:
 	FGameplayTag Attributes_Secondary_ManaRegenerate;
 	FGameplayTag Attributes_Secondary_MaxHealth;
 	FGameplayTag Attributes_Secondary_MaxMana;
+
+	// Input Action Tag
+	FGameplayTag InputTag_LMB;
+	FGameplayTag InputTag_RMB;
+	FGameplayTag InputTag_1;
+	FGameplayTag InputTag_2;
+	FGameplayTag InputTag_3;
+	FGameplayTag InputTag_4;
 
 
 	

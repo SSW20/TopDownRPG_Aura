@@ -28,6 +28,31 @@ void FAuraGameplayTags::InitializeGameplayTags()
 	GameplayTags.Attributes_Secondary_MaxHealth = TagManager.AddNativeGameplayTag(FName("Attributes.Secondary.MaxHealth"), FString("보조 능력치: 최대 체력"));
 	GameplayTags.Attributes_Secondary_MaxMana = TagManager.AddNativeGameplayTag(FName("Attributes.Secondary.MaxMana"), FString("보조 능력치: 최대 마나"));
 
+	// Input Tags
+	GameplayTags.InputTag_LMB = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.LMB"),
+		FString("Input Tag for Left Mouse Button")
+	);
+	GameplayTags.InputTag_RMB = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.RMB"),
+		FString("Input Tag for Right Mouse Button")
+	);
+	GameplayTags.InputTag_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.One"),
+		FString("Input Tag for Key 1")
+	);
+	GameplayTags.InputTag_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.Two"),
+		FString("Input Tag for Key 2")
+	);
+	GameplayTags.InputTag_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.Three"),
+		FString("Input Tag for Key 3")
+	);
+	GameplayTags.InputTag_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("InputTag.Four"),
+		FString("Input Tag for Key 4")
+	);
 	
 }
 

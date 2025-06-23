@@ -43,6 +43,7 @@ int32 AAuraEnemy::GetPlayerLevel() const
 void AAuraEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	InitAbilityActorInfo();
 }
 
 void AAuraEnemy::InitAbilityActorInfo()

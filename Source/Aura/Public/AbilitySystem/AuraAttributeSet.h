@@ -15,6 +15,7 @@
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+//DECLARE_DELEGATE_RetVal() << TBaseStaticDelegateInstance로 대체
 
 USTRUCT()
 struct FEffectProperties
@@ -60,6 +61,22 @@ public:
 
 	// 멀티플레이어 게임에서 어떤 속성들을 네트워크를 통해 복제 (Replication) 할지 결정하는 역할
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	//TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+
+
+	//FGameplayAttribute타입을 변환하고 함수 포인터를 저장할 수 있는 델레게이트, 파라미터는 받지 않음 () 식으로 되어있기 때문에
+	//FFuncPtr  있다 --> 순수한 함수 포인터 타입 / 없다 --> 그냥 델레게이트임
+	//using TStaticFuncPtr << 이거로 TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr를 대체함
+	//T는 직접 타입 지정
+	template<class T>
+	using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
+	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
+	
+	//TBaseStaticDelegateInstance<FGameplayAttribute(), FDefaultDelegateUserPolicy>::FFuncPtr StaticFunc;
+	//TMap<FGameplayTag, TBaseStaticDelegateInstance<FGameplayAttribute(), FDefaultDelegateUserPolicy>::FFuncPtr> TagToAttributes;
+
 
 	/*
 	*			Vital Attribute
@@ -191,12 +208,7 @@ public:
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
 
-	template<class T>
-	using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
-	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
 };

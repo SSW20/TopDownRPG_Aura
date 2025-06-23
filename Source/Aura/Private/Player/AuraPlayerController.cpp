@@ -4,17 +4,26 @@
 #include "Player/AuraPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Input/AuraInputComponent.h"
+#include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Components/SplineComponent.h"
 #include "Interaction/EnemyInterface.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
+#include "AuraGameplayTags.h"
 AAuraPlayerController::AAuraPlayerController()
 {
 	//서버에서 값 변경시 클라이언트도 복제되서 바뀜
 	bReplicates = true;
+	Spline = CreateDefaultSubobject<USplineComponent>(FName("Spine"));
 }
 void AAuraPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
 	CursorTrace();
+	AutoRun();
 }
 
 void AAuraPlayerController::CursorTrace()
@@ -80,6 +89,110 @@ void AAuraPlayerController::CursorTrace()
 	}
 }
 
+void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+	//GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Red, FString::Printf(TEXT("Pressed: %s"), *InputTag.ToString()));
+	if(FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
+	{
+		bTargeting = ThisActor ? true : false;
+		bAutoRunning = false;
+	}
+}
+
+void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	if (!FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
+	{
+		GetASC()->PlayIfReleased(InputTag);
+		return;
+	}
+	if (bTargeting || bIsShiftPressed)
+	{
+		GetASC()->PlayIfReleased(InputTag);
+	}
+	else
+	{
+		APawn* PlayerPawn = GetPawn();
+		if (FollowTime <= ShortPressThreshold && PlayerPawn)
+		{
+			if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, PlayerPawn->GetActorLocation(), CachedDestination))
+			{
+				Spline->ClearSplinePoints();
+				for (auto& Path : NavPath->PathPoints)
+				{
+					Spline->AddSplinePoint(Path, ESplineCoordinateSpace::World);
+				}
+				CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+			}
+			bAutoRunning = true;
+			FollowTime = 0.f;
+		}
+	}
+}
+
+void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+	if (!FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
+	{
+		GetASC()->PlayIfHeld(InputTag);
+		return;
+	}
+	if (bTargeting || bIsShiftPressed)
+	{
+		GetASC()->PlayIfHeld(InputTag);
+	}
+	else
+	{
+		FollowTime += GetWorld()->GetDeltaSeconds();
+		FHitResult HitResult;
+		if (GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, HitResult))
+		{
+			CachedDestination = HitResult.ImpactPoint;
+		}
+		if (APawn* PlayerPawn = GetPawn())
+		{
+			FVector MoveDestination = CachedDestination - PlayerPawn->GetActorLocation();
+			PlayerPawn->AddMovementInput(MoveDestination);
+		}
+	}
+
+}
+
+void AAuraPlayerController::ShiftReleased()
+{
+	bIsShiftPressed = false;
+}
+
+void AAuraPlayerController::ShiftPressed()
+{
+	bIsShiftPressed = true;
+}
+
+UAuraAbilitySystemComponent* AAuraPlayerController::GetASC()
+{
+	if (ASC == nullptr)
+	{
+		ASC = Cast<UAuraAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn<APawn>()));
+	}
+	return ASC;
+}
+
+void AAuraPlayerController::AutoRun()
+{
+	if (!bAutoRunning)
+		return;
+	if (APawn* PlayerPawn = GetPawn())
+	{
+		const FVector ClosestLocactionOnSpline = Spline->FindLocationClosestToWorldLocation(PlayerPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+		FVector ClosetDirectionOnSpline = Spline->FindDirectionClosestToWorldLocation(PlayerPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+		PlayerPawn->AddMovementInput(ClosetDirectionOnSpline);
+
+		float DistanceFromDestination = (CachedDestination - ClosestLocactionOnSpline).Length();
+		if (DistanceFromDestination <= AutoRunAcceptanceRadius)
+			bAutoRunning = false;
+ 	}
+}
+
 
 
 void AAuraPlayerController::BeginPlay()
@@ -115,9 +228,12 @@ void AAuraPlayerController::SetupInputComponent()
 	//CastChecked : Cast + Check
 	// 플레이어 컨트롤러에는 InputComponent라는 변수가 있음
 	//InputComponent는 UInputComponent 타입의 포인터이지만, 실제로는 UEnhancedInputComponent 타입의 객체의 주소를 저장하고 있기 때문에 캐스트함
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+	UAuraInputComponent* AuraInputComponent = CastChecked<UAuraInputComponent>(InputComponent);
 	
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
+	AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
+	AuraInputComponent->BindAbilityActions(InputConfig, this, &AAuraPlayerController::AbilityInputTagPressed, &AAuraPlayerController::AbilityInputTagReleased, &AAuraPlayerController::AbilityInputTagHeld);
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &AAuraPlayerController::ShiftPressed);
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AAuraPlayerController::ShiftReleased);
 }
 
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
