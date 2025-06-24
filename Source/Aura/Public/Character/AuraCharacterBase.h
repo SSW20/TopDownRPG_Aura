@@ -52,6 +52,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartGameplayAbilities;
 
-	void InitializeDefaultAttributes() const;
+	virtual void InitializeDefaultAttributes() const;
 	void ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> EffectClass, float level) const;
 };
