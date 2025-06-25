@@ -40,4 +40,7 @@ public:
 	TSubclassOf<UGameplayEffect> SecondaryAttributes; 
 	UPROPERTY(EditDefaultsOnly, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
 };

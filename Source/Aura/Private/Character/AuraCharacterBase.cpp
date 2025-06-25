@@ -64,6 +64,49 @@ void AAuraCharacterBase::ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> Effe
 	
 }
 
+void AAuraCharacterBase::Die()
+{
+	Weapon->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	MulticastHandleDeath();
+}
+
+void AAuraCharacterBase::MulticastHandleDeath_Implementation()
+{
+	Weapon->SetSimulatePhysics(true);
+	Weapon->SetEnableGravity(true);
+	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	Disolve();
+}
+
+void AAuraCharacterBase::Disolve()
+{
+	if (IsValid(CharacterMaterial))
+	{
+		UMaterialInstanceDynamic* CharacterDynamicMaterial = UMaterialInstanceDynamic::Create(CharacterMaterial, this);
+		GetMesh()->SetMaterial(0, CharacterDynamicMaterial);
+		StartCharacterDisolveTimeLine(CharacterDynamicMaterial);
+
+	}
+	if (IsValid(WeaponMaterial))
+	{
+		UMaterialInstanceDynamic* WeaponDynamicMaterial = UMaterialInstanceDynamic::Create(WeaponMaterial, this);
+		Weapon->SetMaterial(0, WeaponDynamicMaterial);
+		StartWeaponDisolveTimeLine(WeaponDynamicMaterial);
+	}
+}
+
+UAnimMontage* AAuraCharacterBase::GetHitReactMontage_Implementation()
+{
+	return HitReaction;
+}
+
 void AAuraCharacterBase::InitializeDefaultAttributes() const
 {
 	ApplyEffectToSelfInit(DefaultPrimaryAttributes, 1.f);

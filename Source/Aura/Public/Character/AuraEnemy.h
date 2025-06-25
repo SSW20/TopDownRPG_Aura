@@ -38,6 +38,14 @@ public:
 	FOnAttributeChangedSignature OnHealthChanged;
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnMaxHealthChanged;
+
+	void HitReactTagChanged(const FGameplayTag Tag, int32 count);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsReacting = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	float MoveSpeed = 250.f;
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
@@ -47,10 +55,17 @@ protected:
 	int32 Level = 1;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
+	float LifeSpan = 5.f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent;
+
+
+
+	virtual void Die() override;
 private:
 	
 };

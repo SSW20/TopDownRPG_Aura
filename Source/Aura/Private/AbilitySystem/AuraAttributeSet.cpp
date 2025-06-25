@@ -2,6 +2,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/Character.h"
 #include "GameplayEffectExtension.h"
+#include "GameplayTagContainer.h"
+#include "Interaction/CombatInterface.h"
 #include "Net/UnrealNetwork.h"
 #include "AuraGameplayTags.h"
 UAuraAttributeSet::UAuraAttributeSet()
@@ -163,8 +165,36 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
-	UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s. Health: %f"),
-		*GetOwningActor()->GetName(), GetHealth());
+	
+	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+	{
+		float NewHealth = GetHealth() - GetIncomingDamage();
+		bool bIsDead = false;
+		
+
+		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+		UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s. Health: %f"),
+			*GetOwningActor()->GetName(), GetHealth());
+
+		if (NewHealth <= 0)
+			bIsDead = true;
+		SetIncomingDamage(0.f);
+
+		if (!bIsDead)
+		{
+			FGameplayTagContainer TagContainer;
+			TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
+			
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActor())->TryActivateAbilitiesByTag(TagContainer);
+		}
+		else
+		{
+			if (ICombatInterface* Target = Cast<ICombatInterface>(Props.TargetAvatarActor))
+			{
+				Target->Die();
+			}
+		}
+	}
 }
 
 void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const

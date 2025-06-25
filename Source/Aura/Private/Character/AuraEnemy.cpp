@@ -6,6 +6,8 @@
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "UI/Widget/AuraUserWidget.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
+#include "AuraGameplayTags.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystem/AuraAttributeSet.h"
 AAuraEnemy::AAuraEnemy()
 {
@@ -20,7 +22,6 @@ AAuraEnemy::AAuraEnemy()
 	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidgetComponent"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 	//HealthBarWidgetComponent->SetRelativeLocation(FVector(0, 0, 30));
-
 
 }
 void AAuraEnemy::HighlightActor()
@@ -46,10 +47,19 @@ int32 AAuraEnemy::GetPlayerLevel() const
 	return Level;
 }
 
+void AAuraEnemy::HitReactTagChanged(const FGameplayTag Tag, int32 count)
+{
+	if (count > 0) bIsReacting = true;
+	GetCharacterMovement()->MaxWalkSpeed = bIsReacting ? 0.f : MoveSpeed;
+}
+
 void AAuraEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	InitAbilityActorInfo();
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
+
 
 	UAuraUserWidget* HealthWidget = Cast<UAuraUserWidget>(HealthBarWidgetComponent->GetWidget());
 	HealthWidget->SetWidgetController(this);
@@ -60,7 +70,10 @@ void AAuraEnemy::BeginPlay()
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnHealthChanged.Broadcast(Data.NewValue); });
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxHealthAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnMaxHealthChanged.Broadcast(Data.NewValue); });
-	
+	AbilitySystemComponent->RegisterGameplayTagEvent(FAuraGameplayTags::Get().Effect_HitReact, EGameplayTagEventType::NewOrRemoved).
+		AddUObject(this,&AAuraEnemy::HitReactTagChanged);
+
+
 	OnHealthChanged.Broadcast(AuraAttributeSet->GetHealth());
 	OnMaxHealthChanged.Broadcast(AuraAttributeSet->GetMaxHealth());
 }
@@ -76,4 +89,11 @@ void AAuraEnemy::InitAbilityActorInfo()
 void AAuraEnemy::InitializeDefaultAttributes() const 
 {
 	UAuraAbilitySystemLibrary::InitDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
+	UAuraAbilitySystemLibrary::InitDefaultAbilities(this, AbilitySystemComponent);
+}
+
+void AAuraEnemy::Die()
+{
+	Super::Die();
+	SetLifeSpan(LifeSpan);
 }

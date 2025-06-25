@@ -157,6 +157,13 @@ public:
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, MaxMana);
 
 
+	/*                             
+			Meta Data
+	*/		
+	UPROPERTY(BlueprintReadOnly, Category="Meta Data")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, IncomingDamage);
+
 
 
 	// 인자를 0 ~ 1개 받을 수 있음 -> 업데이트 이전 값이 들어감
