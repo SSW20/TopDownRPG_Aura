@@ -9,6 +9,7 @@
 #include "UI/Widget/AuraUserWidget.h"
 #include "UI/WidgetController/AuraWidgetController.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
+#include "UI/Widget/FloatingDamageText.h"
 #include "GameplayEffect.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AuraEnemy.generated.h"
@@ -46,6 +47,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	float MoveSpeed = 250.f;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;

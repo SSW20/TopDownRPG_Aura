@@ -8,6 +8,7 @@
 #include "Materials/MaterialInstance.h"
 #include "GameplayEffect.h"
 #include "Interaction/CombatInterface.h"
+#include "UI/Widget/FloatingDamageText.h"
 #include "Abilities/GameplayAbility.h"
 #include "AuraCharacterBase.generated.h"
 
@@ -24,6 +25,8 @@ public:
 	AAuraCharacterBase();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -60,7 +63,8 @@ protected:
 	TObjectPtr<UMaterialInstance> CharacterMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Disolve")
 	TObjectPtr<UMaterialInstance> WeaponMaterial;
-	
+
+
 	void Disolve();
 
 	UFUNCTION(BlueprintImplementableEvent)

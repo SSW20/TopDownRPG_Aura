@@ -12,6 +12,9 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "AuraGameplayTags.h"
+#include "GameFramework/Character.h"
+#include "UI/Widget/FloatingDamageText.h"
+
 AAuraPlayerController::AAuraPlayerController()
 {
 	//서버에서 값 변경시 클라이언트도 복제되서 바뀜
@@ -25,6 +28,21 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 	CursorTrace();
 	AutoRun();
 }
+
+void AAuraPlayerController::ShowDamageNumber_Implementation(float Damage, ACharacter* TargetCharacter)
+{
+	if (IsValid(TargetCharacter) && DamageTextClass)
+	{
+		//NewObject : 새로운 UObject 인스턴스(객체)를 런타임에 생성할 때 사용
+		//RegisterComponent : 새로 생성된 DamageText 컴포넌트를 언리얼 엔진에 정식으로 등록하여 활성화  --> Tick, Rendering, 충돌 등등 가능
+		UFloatingDamageText* DamageText = NewObject<UFloatingDamageText>(TargetCharacter,DamageTextClass);
+		DamageText->RegisterComponent();
+		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		DamageText->SetDamageText(Damage);
+	}
+}
+
 
 void AAuraPlayerController::CursorTrace()
 {

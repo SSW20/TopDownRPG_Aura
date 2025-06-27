@@ -2,6 +2,7 @@
 #include "Character/AuraCharacterBase.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "UI/Widget/FloatingDamageText.h"
 #include "Components/CapsuleComponent.h"
 #include "Aura/Aura.h"
 // Sets default values

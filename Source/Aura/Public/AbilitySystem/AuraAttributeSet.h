@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
+#include "UI/Widget/FloatingDamageText.h"
 #include "AbilitySystemComponent.h"
 #include "AuraAttributeSet.generated.h"
 

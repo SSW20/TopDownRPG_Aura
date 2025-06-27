@@ -5,7 +5,13 @@
 #include "GameplayTagContainer.h"
 #include "Interaction/CombatInterface.h"
 #include "Net/UnrealNetwork.h"
+#include "Character/AuraCharacterBase.h"
+#include "Character/AuraEnemy.h"
+#include "Interaction/EnemyInterface.h"
 #include "AuraGameplayTags.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/AuraPlayerController.h"
+
 UAuraAttributeSet::UAuraAttributeSet()
 {
 	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get();
@@ -168,10 +174,10 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	
 	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		float NewHealth = GetHealth() - GetIncomingDamage();
+		const float IncomeDamage = GetIncomingDamage();
+		float NewHealth = GetHealth() - IncomeDamage;
 		bool bIsDead = false;
 		
-
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 		UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s. Health: %f"),
 			*GetOwningActor()->GetName(), GetHealth());
@@ -192,6 +198,14 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			if (ICombatInterface* Target = Cast<ICombatInterface>(Props.TargetAvatarActor))
 			{
 				Target->Die();
+			}
+		}
+
+		if (Props.TargetCharacter != Props.SourceCharacter)
+		{
+			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
+			{
+				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter);
 			}
 		}
 	}
@@ -217,7 +231,7 @@ void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 		}
 		if (Props.SourceController)
 		{
-			ACharacter* SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
+			Props.SourceCharacter = Cast<ACharacter>(Props.SourceController->GetPawn());
 		}
 	}
 

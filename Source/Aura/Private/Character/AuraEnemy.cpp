@@ -7,6 +7,7 @@
 #include "UI/Widget/AuraUserWidget.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "AuraGameplayTags.h"
+#include "UI/Widget/FloatingDamageText.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystem/AuraAttributeSet.h"
 AAuraEnemy::AAuraEnemy()
@@ -22,7 +23,6 @@ AAuraEnemy::AAuraEnemy()
 	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidgetComponent"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 	//HealthBarWidgetComponent->SetRelativeLocation(FVector(0, 0, 30));
-
 }
 void AAuraEnemy::HighlightActor()
 {
