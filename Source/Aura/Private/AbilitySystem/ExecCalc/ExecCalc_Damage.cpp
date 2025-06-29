@@ -47,6 +47,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	EvaluateParams.SourceTags = SourceTags;
 	EvaluateParams.TargetTags = TargetTags;
 
+	FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
+
+
 	/*
 	 *		Damage 계산 로직 부분
 	 */
@@ -73,6 +76,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	float TargetCritHitChance = SourceCritHitChance - TargetCritHitResist;
 	bool bIsCrit = FMath::RandRange(0.f, 100.f) < TargetCritHitChance;
 	if (bIsCrit) Damage *= (1.f + SourceCritHitDamage / 100.f) ;
+
+	// bCrit값 설정
+	UAuraAbilitySystemLibrary::SetIsCriticalHit(EffectContextHandle, bIsCrit);
 	
 	//Target의 BlockChance 속성을 캡쳐하여 TargetBlockChance 값을 변경
 	float TargetBlockChance = 0.f;
@@ -82,6 +88,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// 막았을 시 데미지 반감
 	bool bBlocked = FMath::RandRange(0, 100) < TargetBlockChance;
 	if (bBlocked) Damage /= 2.f;
+
+	// bBlock 값 설정 
+	UAuraAbilitySystemLibrary::SetIsBlockedHit(EffectContextHandle, bBlocked);
 
 	//Target의 Armor 속성을 캡쳐하여 TargetArmor 값을 변경
 	float TargetArmor = 0.f;

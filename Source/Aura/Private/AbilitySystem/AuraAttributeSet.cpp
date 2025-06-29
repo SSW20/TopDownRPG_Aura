@@ -208,6 +208,10 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter);
 			}
 		}
+
+		
+		const bool bBlock = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle); 
+		const bool bCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
 	}
 }
 

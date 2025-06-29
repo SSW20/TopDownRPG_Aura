@@ -6,6 +6,7 @@
 #include "AttributeSet.h"
 #include "UI/Widget/FloatingDamageText.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "AuraAttributeSet.generated.h"
 
 // ATTRIBUTE_ACCESSORS 매크로
