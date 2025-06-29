@@ -66,8 +66,11 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 
 		// Gameplay Tag : Key / Magnitude : Value
 		FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
-		SpecHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage,Damage.GetValueAtLevel(4));
-
+		for (auto& DamageType : DamageTypes)
+		{
+			SpecHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, DamageType.Key,DamageType.Value.GetValueAtLevel(GetAbilityLevel()));
+		}
+		
 		Projectile->DamageEffectSpecHandle = SpecHandle;
 		Projectile->FinishSpawning(SpawnTransform);
 	}

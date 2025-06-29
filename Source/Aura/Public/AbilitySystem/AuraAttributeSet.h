@@ -72,6 +72,7 @@ public:
 	//FFuncPtr  있다 --> 순수한 함수 포인터 타입 / 없다 --> 그냥 델레게이트임
 	//using TStaticFuncPtr << 이거로 TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr를 대체함
 	//T는 직접 타입 지정
+	//순환할 시 좋음
 	template<class T>
 	using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> TagsToAttributes;
@@ -160,14 +161,32 @@ public:
 
 
 	/*                             
-			Meta Data
+			Meta Data Damage
 	*/		
 	UPROPERTY(BlueprintReadOnly, Category="Meta Data")
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, IncomingDamage);
 
+	/*                             
+			Damage Resistance
+	*/	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_FireResistance,Category="Damage Resistance")
+	FGameplayAttributeData FireResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, FireResistance);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LightningResistance,Category="Damage Resistance")
+	FGameplayAttributeData LightningResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, LightningResistance);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ArcaneResistance,Category="Damage Resistance")
+	FGameplayAttributeData ArcaneResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, ArcaneResistance);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalResistance,Category="Damage Resistance")
+	FGameplayAttributeData PhysicalResistance;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, PhysicalResistance);
+
+	
 	// 인자를 0 ~ 1개 받을 수 있음 -> 업데이트 이전 값이 들어감
 
 	/*
@@ -216,7 +235,14 @@ public:
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) const;
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldMaxMana) const;
-
+	UFUNCTION()
+	void OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const;
+	UFUNCTION()
+	void OnRep_LightningResistance(const FGameplayAttributeData& OldLightningResistance) const;
+	UFUNCTION()
+	void OnRep_ArcaneResistance(const FGameplayAttributeData& OldArcaneResistance) const;
+	UFUNCTION()
+	void OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const;
 
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;

@@ -16,7 +16,11 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatics().CritHitChanceDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CritHitDamageDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CritHitResistDef);
-
+	RelevantAttributesToCapture.Add(DamageStatics().FireResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().LightningResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().ArcaneResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().PhysicalResistanceDef);
+	
 }
 
 
@@ -31,7 +35,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
 
 	// ASC를 가져오면 ASC를 가지는 액터를 가져올 수 있음
-	AActor* SourcActor =  SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+	AActor* SourceActor =  SourceASC ? SourceASC->GetAvatarActor() : nullptr;
 	AActor* TargetActor = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
 
 	//ExecutionParams을 통해 GameplayEffectSpec(GE의 설계도)을 가져옴 
@@ -56,7 +60,24 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	
 	//Damage를 가져옴
 	float Damage = 0.f;
-	Damage = EffectSpec.GetSetByCallerMagnitude(FAuraGameplayTags::Get().Damage);
+	// 데미지 타입 Tag - 데미지 저항 Tag Map 과 Tag - TagDef Map 을 통해 실제 저항 값을 가져옴
+	for (const TPair<FGameplayTag, FGameplayTag> Pair : FAuraGameplayTags::Get().DamageTypesToResistances)
+	{ 
+		const FGameplayTag DamageTypeTag = Pair.Key;
+		const FGameplayTag ResistanceTag = Pair.Value;
+
+		checkf(AuraDamageStatics().TagsToCapturesMap.Contains(ResistanceTag), TEXT("TagsToCaptureDefs doesn't contain Tag: [%s] in ExecCalc_Damage"), *ResistanceTag.ToString())
+		const FGameplayEffectAttributeCaptureDefinition ResistanceCaptureDef = AuraDamageStatics().TagsToCapturesMap[ResistanceTag];
+		
+		float TargetResistance = 0.f;
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(ResistanceCaptureDef, EvaluateParams, TargetResistance);
+		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
+
+		float TargetDamage = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag);
+		TargetDamage *= (100.f - TargetResistance) / 100.f;
+
+		Damage += TargetDamage;
+	}
 
 	//Source의 CritHitChance 속성을 캡쳐하여 SourceCritHitChance 값을 변경 
 	float SourceCritHitChance = 0.f;

@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
 #include "AbilitySystem/AuraAttributeSet.h"
+#include "AuraGameplayTags.h"
 #include "ExecCalc_Damage.generated.h"
 
 /**
  *
  */
+
+struct FAuraGameplayTags;
 
 struct AuraDamageStatics
 {
@@ -20,6 +23,12 @@ struct AuraDamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritHitChance);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritHitDamage);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritHitResist);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(FireResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(LightningResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(ArcaneResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalResistance);
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCapturesMap;
+
 	AuraDamageStatics()
 	{
 		// 선언된 능력치 캡처 정의를 구체적으로 초기화합니다.
@@ -33,6 +42,23 @@ struct AuraDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, CritHitChance, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, CritHitDamage, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, CritHitResist, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, FireResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, LightningResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, ArcaneResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, PhysicalResistance, Target, false);
+
+		const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_Armor, ArmorDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_BlockChance, BlockChanceDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_ArmorPenetration, ArmorPenetrationDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitChance, CritHitChanceDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitResistance, CritHitResistDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitDamage, CritHitDamageDef);
+
+		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Arcane, ArcaneResistanceDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Fire, FireResistanceDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Lightning, LightningResistanceDef);
+		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Physical, PhysicalResistanceDef);
 	}
 };
 
