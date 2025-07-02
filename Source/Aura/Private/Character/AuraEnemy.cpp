@@ -10,6 +10,10 @@
 #include "UI/Widget/FloatingDamageText.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystem/AuraAttributeSet.h"
+#include "AI/AuraAIController.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 AAuraEnemy::AAuraEnemy()
 {
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECR_Block);
@@ -23,6 +27,12 @@ AAuraEnemy::AAuraEnemy()
 	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidgetComponent"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 	//HealthBarWidgetComponent->SetRelativeLocation(FVector(0, 0, 30));
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	
 }
 void AAuraEnemy::HighlightActor()
 {
@@ -51,6 +61,20 @@ void AAuraEnemy::HitReactTagChanged(const FGameplayTag Tag, int32 count)
 {
 	if (count > 0) bIsReacting = true;
 	GetCharacterMovement()->MaxWalkSpeed = bIsReacting ? 0.f : MoveSpeed;
+	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bIsReacting);
+}
+
+void AAuraEnemy::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (HasAuthority())
+	{
+		AIController = Cast<AAuraAIController>(NewController);
+		AIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+		AIController->RunBehaviorTree(BehaviorTree);
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), CharacterClass != ECharacterClass::Warrior);
+	}
 }
 
 void AAuraEnemy::BeginPlay()
@@ -59,8 +83,10 @@ void AAuraEnemy::BeginPlay()
 	InitAbilityActorInfo();
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
-
-
+	if (HasAuthority())
+	{
+		UAuraAbilitySystemLibrary::InitDefaultAbilities(this, AbilitySystemComponent);
+	}
 	UAuraUserWidget* HealthWidget = Cast<UAuraUserWidget>(HealthBarWidgetComponent->GetWidget());
 	HealthWidget->SetWidgetController(this);
 
@@ -83,13 +109,17 @@ void AAuraEnemy::InitAbilityActorInfo()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 
-	InitializeDefaultAttributes();
+	if (HasAuthority())
+	{
+		InitializeDefaultAttributes();
+	}
 }
+
 
 void AAuraEnemy::InitializeDefaultAttributes() const 
 {
 	UAuraAbilitySystemLibrary::InitDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
-	UAuraAbilitySystemLibrary::InitDefaultAbilities(this, AbilitySystemComponent);
+
 }
 
 void AAuraEnemy::Die()

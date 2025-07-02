@@ -14,10 +14,11 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AuraEnemy.generated.h"
 
+class AAuraAIController;
 /**
  * 
  */
-
+class UBehaviorTree;
 UCLASS()
 class AURA_API AAuraEnemy : public AAuraCharacterBase, public IEnemyInterface
 {
@@ -26,7 +27,7 @@ class AURA_API AAuraEnemy : public AAuraCharacterBase, public IEnemyInterface
 public:
 	AAuraEnemy();
 public:
-
+	
 	// Start Enemy Interface
 	virtual void HighlightActor() override;
 	virtual void UnHighlightActor() override;
@@ -48,6 +49,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	float MoveSpeed = 250.f;
 
+	virtual void PossessedBy(AController* NewController) override;
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
@@ -65,7 +67,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent;
 
+	UPROPERTY(EditAnywhere, Category = "AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
 
+	UPROPERTY()
+	TObjectPtr<AAuraAIController> AIController;
 
 	virtual void Die() override;
 private:

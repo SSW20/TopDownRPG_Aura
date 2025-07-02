@@ -33,7 +33,6 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 
 		//TODO : Rotation값 설정
 		FRotator Rotation = (TargetLocation - CombatInterface->GetCombatSocketLotation()).Rotation();
-		Rotation.Pitch = 0.f;
 
 		SpawnTransform.SetRotation(Rotation.Quaternion());
 

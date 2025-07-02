@@ -26,6 +26,12 @@ public:
 	AAuraPlayerController();
 	virtual void PlayerTick(float DeltaTime) override;
 
+//UFUNCTION(Client, Reliable):
+// -Client: 이 함수는 '클라이언트 RPC'입니다.서버에서만 호출할 수 있으며,
+//* 해당 PlayerController를 소유한 '특정 클라이언트' 머신에서만 실행됩니다.
+//* (모든 클라이언트가 아닌, 특정 플레이어의 화면에 UI를 띄울 때 사용)
+//* -Reliable : 이 RPC 호출은 네트워크를 통해 대상 클라이언트에게 '반드시 전달되어 실행됨'을 보장합니다.
+//* (데미지 숫자는 중요한 피드백이므로 누락되어서는 안 됩니다.)
 	UFUNCTION(Client, Reliable)
 	void ShowDamageNumber(float Damage, ACharacter* TargetCharacter, bool bIsBlocked, bool bIsCritHit);
 protected:

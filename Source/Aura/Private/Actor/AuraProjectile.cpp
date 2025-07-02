@@ -51,30 +51,49 @@ void AAuraProjectile::BeginPlay()
 
 void AAuraProjectile::Destroyed()
 {
+	//코드가 서버가 아닌 클라이언트에서 실행되고 있을 때.
+    //서버는 OnSphereOverlap에서 이미 효과를 처리하거나, 클라이언트의 중복 재생을 막음
+	//서버의 Destroy가 먼저 도착했을 때 클라이언트가 효과를 재생
 	if (!bIsPlaying && !HasAuthority())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, HitEffect, GetActorLocation());
+		if (LoopSoundComponent)	LoopSoundComponent->Stop();
 	}
 	Super::Destroyed();
 }
 
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, HitEffect, GetActorLocation());
-	LoopSoundComponent->Stop();
+	//투사체가 발사자(주인) 자신을 때리는 경우를 방지, 
+	//만약 코드가 없었다면 자신을 맞추고 Destroy --> 다른 액터를 맞춰도 이미 사라진 상태임
+	if (DamageEffectSpecHandle.Data.IsValid() && DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
+	{
+		return;
+	}
+
+	//이 충돌에 대한 효과가 아직 재생되지 않았다면
+    //클라이언트가 충돌을 예측하여 효과를 먼저 재생하는 시나리오
+	if (!bIsPlaying)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation(), FRotator::ZeroRotator);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, HitEffect, GetActorLocation());
+		if (LoopSoundComponent) LoopSoundComponent->Stop();
+	}
+
+	//서버 권한 하에 데미지 적용 및 투사체 파괴
 	if (HasAuthority())
 	{
-		Destroy();
-
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-		if (TargetASC)
+		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
 			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
 		}
+
+		Destroy();
 	}
-	else 
+
+	//클라이언트에서 충돌 처리 후 플래그 설정
+	else
 	{
 		bIsPlaying = true;
 	}

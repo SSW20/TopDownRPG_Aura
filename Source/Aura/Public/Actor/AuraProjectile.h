@@ -62,5 +62,4 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float LifeSpan = 10.f;
 
-
 };

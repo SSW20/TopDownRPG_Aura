@@ -6,14 +6,11 @@
 #include "Interaction/CombatInterface.h"
 #include "Net/UnrealNetwork.h"
 #include "Character/AuraCharacterBase.h"
-#include "Character/AuraEnemy.h"
-#include "Interaction/EnemyInterface.h"
 #include "AuraGameplayTags.h"
-#include "Kismet/GameplayStatics.h"
 #include "Player/AuraPlayerController.h"
 
 UAuraAttributeSet::UAuraAttributeSet()
-{
+ {
 	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get();
 
 	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength, GetStrengthAttribute);
@@ -210,12 +207,10 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		bool bIsDead = false;
 		
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s. Health: %f"),
-			*GetOwningActor()->GetName(), GetHealth());
 
-		if (NewHealth <= 0)
-			bIsDead = true;
-		SetIncomingDamage(0.f);
+		// if (GetHealth() <= 0)
+		// 	bIsDead = true;
+		// SetIncomingDamage(0.f);
 
 		if (!bIsDead)
 		{
@@ -234,16 +229,13 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 		if (Props.TargetCharacter != Props.SourceCharacter)
 		{
-			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
+			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceController))
 			{
 				const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
 				const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
 				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
 			}
 		}
-
-		
-
 	}
 }
 

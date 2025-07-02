@@ -31,7 +31,7 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 
 void AAuraPlayerController::ShowDamageNumber_Implementation(float Damage, ACharacter* TargetCharacter, bool bIsBlocked, bool bIsCritHit)
 {
-	if (IsValid(TargetCharacter) && DamageTextClass)
+	if (IsValid(TargetCharacter) && DamageTextClass && IsLocalController())
 	{
 		//NewObject : 새로운 UObject 인스턴스(객체)를 런타임에 생성할 때 사용
 		//RegisterComponent : 새로 생성된 DamageText 컴포넌트를 언리얼 엔진에 정식으로 등록하여 활성화  --> Tick, Rendering, 충돌 등등 가능
@@ -140,7 +140,8 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				{
 					Spline->AddSplinePoint(Path, ESplineCoordinateSpace::World);
 				}
-				CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+				if (NavPath->PathPoints.Num() > 0)
+				{CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];}
 			}
 			bAutoRunning = true;
 			FollowTime = 0.f;
