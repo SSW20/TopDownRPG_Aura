@@ -125,6 +125,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	// Armor는 퍼센트로 감소
 	TargetArmor = FMath::Max(0,TargetArmor - SourceArmorPenetration);
+	TargetArmor = FMath::Clamp(TargetArmor, 0.f, 100.f);
 	Damage *= (100 - TargetArmor) / 100.f;
 
 	

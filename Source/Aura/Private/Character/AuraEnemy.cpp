@@ -85,7 +85,7 @@ void AAuraEnemy::BeginPlay()
 
 	if (HasAuthority())
 	{
-		UAuraAbilitySystemLibrary::InitDefaultAbilities(this, AbilitySystemComponent);
+		UAuraAbilitySystemLibrary::InitDefaultAbilities(this, AbilitySystemComponent, CharacterClass);
 	}
 	UAuraUserWidget* HealthWidget = Cast<UAuraUserWidget>(HealthBarWidgetComponent->GetWidget());
 	HealthWidget->SetWidgetController(this);

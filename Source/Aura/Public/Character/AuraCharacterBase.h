@@ -32,7 +32,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo();
 	virtual void AddGameplayAbilities() const; 
-	virtual FVector GetCombatSocketLotation();
 	UPROPERTY(EditAnywhere, Category="Combat")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
 	UPROPERTY(EditAnywhere, Category = "Combat")
@@ -64,7 +63,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Disolve")
 	TObjectPtr<UMaterialInstance> WeaponMaterial;
 
-
+		
 	void Disolve();
 
 	UFUNCTION(BlueprintImplementableEvent)
@@ -72,14 +71,23 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartWeaponDisolveTimeLine(UMaterialInstanceDynamic* DynamicMaterialInstance);
-	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
+
 	virtual void InitializeDefaultAttributes() const;
 	void ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> EffectClass, float level) const;
 
+	/* Combat Interface */
+	virtual FVector GetCombatSocketLotation_Implementation();
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
+	virtual bool IsDead_Implementation() const override;
+	virtual AActor* GetActor_Implementation() override;
 	virtual void Die() override;
 
-	// NetMulticast : ³×Æ®¿öÅ©¸¦ ÅëÇØ ¸ÖÆ¼Ä³½ºÆ®µÉ °Í, ¼­¹ö¿¡¼­ È£ÃâµÇ¸é, ¼­¹ö ÀÚ½Å°ú ÇöÀç ¿¬°áµÈ ¸ğµç Å¬¶óÀÌ¾ğÆ® ¸Ó½Å¿¡¼­ µ¿½Ã¿¡ ½ÇÇà
-	// Reliable : ÀÌ ³×Æ®¿öÅ© RPC È£Ãâ¿¡ ¹®Á¦°¡ ¹ß»ıÇÏ´õ¶óµµ ¿£ÁøÀÌ ÀÌ ÇÔ¼ö È£ÃâÀÌ ¹İµå½Ã ¸ñÀûÁö¿¡ µµÂøÇÏ¿© ½ÇÇàµÇµµ·Ï º¸Àå
+	bool bDead = false;
+	/* End Combat Interface */
+
+	
+	// NetMulticast : "ë„¤íŠ¸ì›Œí¬ë¥¼ í†µí•´ ë©€í‹°ìºìŠ¤íŠ¸ ë¨. ì„œë²„ì—ì„œ í˜¸ì¶œë˜ë©´ ì„œë²„ ìì‹ ê³¼ ì—°ê²°ëœ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ ì¸ìŠ¤í„´ìŠ¤ì—ì„œ ë™ì‹œì— ì‹¤í–‰ë¨.
+	// Reliable : ì´ ë„¤íŠ¸ì›Œí¬ RPC í˜¸ì¶œì€ ë„¤íŠ¸ì›Œí¬ ìƒì—ì„œ ë°œìƒí•˜ë”ë¼ë„ í•´ë‹¹ í•¨ìˆ˜ í˜¸ì¶œì€ ë°˜ë“œì‹œ ëª©ì ì§€ì— ë„ì°©í•˜ì—¬ ì‹¤í–‰ë¨ì„ ë³´ì¥í•¨.
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
 };

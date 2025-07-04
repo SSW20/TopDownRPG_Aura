@@ -199,19 +199,27 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
+
+
 	
 	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
+		// const float IncomeDamage = GetIncomingDamage();
+		// SetIncomingDamage(0.f);
+		//
+		// float NewHealth = GetHealth() - IncomeDamage;
+		// SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 		const float IncomeDamage = GetIncomingDamage();
+		SetIncomingDamage(0.f);
+
 		float NewHealth = GetHealth() - IncomeDamage;
 		bool bIsDead = false;
 		
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-
-		// if (GetHealth() <= 0)
-		// 	bIsDead = true;
-		// SetIncomingDamage(0.f);
-
+		
+		if (NewHealth <= 0)
+			bIsDead = true;
+		
 		if (!bIsDead)
 		{
 			FGameplayTagContainer TagContainer;
@@ -230,6 +238,12 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		if (Props.TargetCharacter != Props.SourceCharacter)
 		{
 			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceController))
+			{
+				const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+				const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+			}
+			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.TargetController))
 			{
 				const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
 				const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);

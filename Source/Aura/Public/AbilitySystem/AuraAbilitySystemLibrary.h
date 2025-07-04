@@ -28,7 +28,7 @@ public:
 	static void InitDefaultAttributes(const UObject* WorldContext, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 
 	UFUNCTION(BlueprintCallable, Category = "AbilitySystem|Character Default Abilities")
-	static void InitDefaultAbilities(const UObject* WorldContext, UAbilitySystemComponent* ASC);
+	static void InitDefaultAbilities(const UObject* WorldContext, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass);
 	
 	
 	// FGameplayEffectContextHandle 만 있으면 접근해서 FAuraGameplayEffectContext 의 함수 호출할 수 있음
@@ -45,4 +45,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInIsCriticalHit);
+
+	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayMechanics")
+	static void GetLivePlayersWithInRadius(const UObject* WorldContextObject, TArray<AActor*> &OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereOrigin);
 };

@@ -46,8 +46,9 @@ void AAuraCharacterBase::AddGameplayAbilities() const
 	UAuraAbilitySystemComponent* AuraASC = CastChecked<UAuraAbilitySystemComponent>(AbilitySystemComponent);
 	AuraASC->AddGameplayAbilities(StartGameplayAbilities);
 }
-FVector AAuraCharacterBase::GetCombatSocketLotation()
+FVector AAuraCharacterBase::GetCombatSocketLotation_Implementation()
 {
+	check(Weapon);
 	return Weapon->GetSocketLocation(WeaponSocketName);
 }
 
@@ -63,6 +64,16 @@ void AAuraCharacterBase::ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> Effe
 	const FGameplayEffectSpecHandle EffectSpec = GetAbilitySystemComponent()->MakeOutgoingSpec(EffectClass, level, EffectContext);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*EffectSpec.Data.Get(), GetAbilitySystemComponent());
 	
+}
+
+bool AAuraCharacterBase::IsDead_Implementation() const
+{
+	return bDead;
+}
+
+AActor* AAuraCharacterBase::GetActor_Implementation()
+{
+	return this;
 }
 
 void AAuraCharacterBase::Die()
@@ -84,6 +95,8 @@ void AAuraCharacterBase::MulticastHandleDeath_Implementation()
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	Disolve();
+
+	bDead = true;
 }
 
 void AAuraCharacterBase::Disolve()
