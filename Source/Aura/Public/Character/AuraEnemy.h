@@ -46,7 +46,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsReacting = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Combat")
 	float MoveSpeed = 250.f;
 
 	virtual void PossessedBy(AController* NewController) override;

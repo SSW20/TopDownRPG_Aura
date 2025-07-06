@@ -26,7 +26,18 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	TArray<FTaggedMontage> TaggedMontages;
 
+	/* Combat Interface */
+	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& Tag) override;
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
+	virtual bool IsDead_Implementation() const override;
+	virtual AActor* GetActor_Implementation() override;
+	virtual void Die() override;
+	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
+	
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -36,7 +47,11 @@ protected:
 	TObjectPtr<USkeletalMeshComponent> Weapon;
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName WeaponSocketName;
-
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName RightHandSocketName;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName LeftHandSocketName;
+	
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
@@ -62,9 +77,9 @@ protected:
 	TObjectPtr<UMaterialInstance> CharacterMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Disolve")
 	TObjectPtr<UMaterialInstance> WeaponMaterial;
-
+	
 		
-	void Disolve();
+	void Dissolve();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartCharacterDisolveTimeLine(UMaterialInstanceDynamic* DynamicMaterialInstance);
@@ -75,13 +90,7 @@ protected:
 	virtual void InitializeDefaultAttributes() const;
 	void ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> EffectClass, float level) const;
 
-	/* Combat Interface */
-	virtual FVector GetCombatSocketLotation_Implementation();
-	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
-	virtual bool IsDead_Implementation() const override;
-	virtual AActor* GetActor_Implementation() override;
-	virtual void Die() override;
-
+	
 	bool bDead = false;
 	/* End Combat Interface */
 

@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "Character/AuraCharacterBase.h"
 #include "AbilitySystemComponent.h"
+#include "AuraGameplayTags.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
-#include "UI/Widget/FloatingDamageText.h"
 #include "Components/CapsuleComponent.h"
 #include "Aura/Aura.h"
 // Sets default values
@@ -46,10 +46,32 @@ void AAuraCharacterBase::AddGameplayAbilities() const
 	UAuraAbilitySystemComponent* AuraASC = CastChecked<UAuraAbilitySystemComponent>(AbilitySystemComponent);
 	AuraASC->AddGameplayAbilities(StartGameplayAbilities);
 }
-FVector AAuraCharacterBase::GetCombatSocketLotation_Implementation()
+
+FVector AAuraCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& Tag)
 {
-	check(Weapon);
-	return Weapon->GetSocketLocation(WeaponSocketName);
+	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get();
+	if (Tag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon) && IsValid(Weapon))
+	{
+		return Weapon->GetSocketLocation(WeaponSocketName);
+	}
+	if (Tag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+	if (Tag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	{
+		return GetMesh()->GetSocketLocation(RightHandSocketName);
+	}
+
+	if (!Tag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Tag Not Match"));
+	}
+	if (!IsValid(Weapon))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Valie Not Wepaon"));
+	}
+	return FVector();
 }
 
 
@@ -82,6 +104,11 @@ void AAuraCharacterBase::Die()
 	MulticastHandleDeath();
 }
 
+TArray<FTaggedMontage> AAuraCharacterBase::GetTaggedMontages_Implementation()
+{
+	return  TaggedMontages;
+}
+
 void AAuraCharacterBase::MulticastHandleDeath_Implementation()
 {
 	Weapon->SetSimulatePhysics(true);
@@ -94,12 +121,12 @@ void AAuraCharacterBase::MulticastHandleDeath_Implementation()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	Disolve();
+	Dissolve();
 
 	bDead = true;
 }
 
-void AAuraCharacterBase::Disolve()
+void AAuraCharacterBase::Dissolve()
 {
 	if (IsValid(CharacterMaterial))
 	{

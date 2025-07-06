@@ -59,9 +59,13 @@ int32 AAuraEnemy::GetPlayerLevel() const
 
 void AAuraEnemy::HitReactTagChanged(const FGameplayTag Tag, int32 count)
 {
-	if (count > 0) bIsReacting = true;
+	if (count > 0) {bIsReacting = true;}
+	else bIsReacting = false;
 	GetCharacterMovement()->MaxWalkSpeed = bIsReacting ? 0.f : MoveSpeed;
-	AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bIsReacting);
+	if (AIController && AIController->GetBlackboardComponent())
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bIsReacting);
+	}
 }
 
 void AAuraEnemy::PossessedBy(AController* NewController)
