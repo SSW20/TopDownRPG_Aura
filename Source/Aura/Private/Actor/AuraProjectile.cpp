@@ -68,7 +68,7 @@ void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, 
 {
 	//투사체가 발사자(주인) 자신을 때리는 경우를 방지, 
 	//만약 코드가 없었다면 자신을 맞추고 Destroy --> 다른 액터를 맞춰도 이미 사라진 상태임
-	if (DamageEffectSpecHandle.Data.IsValid() && DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
+	if (!DamageEffectSpecHandle.Data.IsValid() || DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
 	{
 		return;
 	}

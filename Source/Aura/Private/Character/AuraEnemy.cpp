@@ -160,6 +160,8 @@ void AAuraEnemy::InitializeDefaultAttributes() const
 
 void AAuraEnemy::Die()
 {
-	Super::Die();
 	SetLifeSpan(LifeSpan);
+	if(AIController) AIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+	Super::Die();
+
 }
