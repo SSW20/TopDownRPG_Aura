@@ -204,19 +204,21 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	
 	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
+		const float IncomeDamage = GetIncomingDamage();
+		SetIncomingDamage(0.f);
+		
+		float NewHealth = GetHealth() - IncomeDamage;
+		bool bIsDead = false;
+		UE_LOG(LogTemp, Log, TEXT("%f"), GetHealth());
+		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 		// const float IncomeDamage = GetIncomingDamage();
 		// SetIncomingDamage(0.f);
 		//
 		// float NewHealth = GetHealth() - IncomeDamage;
+		// bool bIsDead = false;
+		//
 		// SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		const float IncomeDamage = GetIncomingDamage();
-		SetIncomingDamage(0.f);
-
-		float NewHealth = GetHealth() - IncomeDamage;
-		bool bIsDead = false;
-		
-		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		
+		//
 		if (NewHealth <= 0)
 			bIsDead = true;
 		

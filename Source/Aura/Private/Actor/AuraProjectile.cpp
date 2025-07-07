@@ -9,6 +9,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "Aura/Aura.h"
 // Sets default values
 AAuraProjectile::AAuraProjectile()
@@ -71,7 +72,10 @@ void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, 
 	{
 		return;
 	}
-
+	if (UAuraAbilitySystemLibrary::IsFriend(DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(),OtherActor))
+	{
+		return;
+	}
 	//이 충돌에 대한 효과가 아직 재생되지 않았다면
     //클라이언트가 충돌을 예측하여 효과를 먼저 재생하는 시나리오
 	if (!bIsPlaying)

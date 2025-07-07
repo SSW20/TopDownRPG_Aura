@@ -43,7 +43,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo();
 	virtual void AddGameplayAbilities() const; 
-	UPROPERTY(EditAnywhere, Category="Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat")
 	TObjectPtr<USkeletalMeshComponent> Weapon;
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName WeaponSocketName;
@@ -52,10 +52,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName LeftHandSocketName;
 	
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAttributeSet> AttributeSet;
 
 	UPROPERTY(BlueprintReadOnly, EditAnyWhere, Category = "Attributes")

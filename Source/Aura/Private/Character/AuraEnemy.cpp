@@ -56,7 +56,15 @@ int32 AAuraEnemy::GetPlayerLevel() const
 {
 	return Level;
 }
+void AAuraEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
+{
+	CombatTarget = InCombatTarget;
+}
 
+AActor* AAuraEnemy::GetCombatTarget_Implementation() const
+{
+	return CombatTarget;
+}
 void AAuraEnemy::HitReactTagChanged(const FGameplayTag Tag, int32 count)
 {
 	if (count > 0) {bIsReacting = true;}
@@ -95,7 +103,31 @@ void AAuraEnemy::BeginPlay()
 	HealthWidget->SetWidgetController(this);
 
 
-	UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
+	/*UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
+	if (AuraAttributeSet == nullptr)
+	{
+		return;
+	}*/
+
+	// 3. 가져온 AttributeSet이 NULL인지 확인
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ERROR: AttributeSetBase is NULL for %s!"), *GetActorLabel());
+		return; // AttributeSet이 없으면 더 진행할 수 없습니다.
+	}
+
+	// 4. UAuraAttributeSet*으로 안전하게 캐스팅 시도
+	UAuraAttributeSet* AuraAttributeSet = Cast<UAuraAttributeSet>(AttributeSet);
+
+	// 5. 캐스팅이 성공했는지 확인
+	if (!AuraAttributeSet)
+	{
+		// 캐스팅 실패! 어떤 타입인지 로그로 확인하여 원인 파악
+		UE_LOG(LogTemp, Error, TEXT("ERROR: Cast to UAuraAttributeSet FAILED for %s. Actual AttributeSet type: %s"),
+			*GetActorLabel(), *AttributeSet->GetClass()->GetName());
+		return; // 올바른 타입의 AttributeSet이 아니므로 더 진행할 수 없습니다.
+	}
+
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetHealthAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnHealthChanged.Broadcast(Data.NewValue); });
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxHealthAttribute()).

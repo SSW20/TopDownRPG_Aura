@@ -34,3 +34,12 @@ void UAuraDamageGameplayAbility::CauseDamage(AActor* TargetActor)
     //       연결된 Execution Calculation이 서버에서 실행되어 최종 데미지 계산 및 적용이 이루어집니다.
     GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 }
+
+FTaggedMontage UAuraDamageGameplayAbility::GetTaggedMontageInArray(const TArray<FTaggedMontage>& TaggedMontages)
+{
+	if (TaggedMontages.Num() == 0) return FTaggedMontage{};
+	int index = FMath::RandRange(0,TaggedMontages.Num()-1);
+	return TaggedMontages[index];
+}
+
+
