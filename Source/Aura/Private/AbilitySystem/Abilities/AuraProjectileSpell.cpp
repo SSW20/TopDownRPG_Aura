@@ -29,7 +29,7 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 
 	FTransform SpawnTransform;
 	//BlueprintNativeEvent 인터페이스 함수 호출 시 첫 번째 인자는 '인터페이스를 구현하는 객체
-	FVector SpawnLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), FAuraGameplayTags::Get().Montage_Attack_Weapon);
+	FVector SpawnLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), FAuraGameplayTags::Get().Socket_Weapon);
 	SpawnTransform.SetLocation(SpawnLocation);
 
 	//TODO : Rotation값 설정

@@ -38,7 +38,7 @@ public:
 	virtual void Die() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
-	
+	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& Tag) override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

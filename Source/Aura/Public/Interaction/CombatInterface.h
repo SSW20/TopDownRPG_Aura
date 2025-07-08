@@ -24,8 +24,11 @@ struct FTaggedMontage
 	UAnimMontage* Montage = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FGameplayTag MontageTag;
+	FGameplayTag SocketTag;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag AttackTag;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USoundBase* HitSoundBase;
 };
@@ -62,4 +65,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	TArray<FTaggedMontage> GetTaggedMontages();
+
+	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
+	FTaggedMontage GetTaggedMontageByTag(const FGameplayTag& Tag);
 };

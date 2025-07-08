@@ -116,18 +116,36 @@ void FAuraGameplayTags::InitializeGameplayTags()
 		FString("Attack Ability")
 	);
 
-	// Montages
-	GameplayTags.Montage_Attack_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Montage.Attack.Weapon"),
-		FString("Montages")
+	// Socket
+	GameplayTags.Socket_Weapon = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Socket.Weapon"),
+		FString("Socket")
 	);
-	GameplayTags.Montage_Attack_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Montage.Attack.LeftHand"),
-		FString("Montages")
+	GameplayTags.Socket_LeftHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Socket.LeftHand"),
+		FString("Socket")
 	);
-	GameplayTags.Montage_Attack_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
-		FName("Montage.Attack.RightHand"),
-		FString("Montages")
+	GameplayTags.Socket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Socket.RightHand"),
+		FString("Socket")
+	);
+
+	// Attack			 GameplayCue에서 사용, Wait에서 기다림
+	GameplayTags.Montage_Attack_1 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Montage.Attack.1"),
+		FString("Attack")
+	);
+	GameplayTags.Montage_Attack_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Montage.Attack.2"),
+			FString("Attack")
+		);
+	GameplayTags.Montage_Attack_3 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Montage.Attack.3"),
+		FString("Attack")
+	);
+	GameplayTags.Montage_Attack_4 = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Montage.Attack.4"),
+		FString("Attack")
 	);
 
 }
