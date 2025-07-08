@@ -97,6 +97,9 @@ protected:
 	bool bDead = false;
 	/* End Combat Interface */
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Combat")
+	USoundBase* DeathSoundBase;
+
 	
 	// NetMulticast : "네트워크를 통해 멀티캐스트 됨. 서버에서 호출되면 서버 자신과 연결된 모든 클라이언트 인스턴스에서 동시에 실행됨.
 	// Reliable : 이 네트워크 RPC 호출은 네트워크 상에서 발생하더라도 해당 함수 호출은 반드시 목적지에 도착하여 실행됨을 보장함.
