@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 #include "Materials/MaterialInstance.h"
 #include "GameplayEffect.h"
+#include "NiagaraSystem.h"
 #include "Interaction/CombatInterface.h"
 #include "UI/Widget/FloatingDamageText.h"
 #include "Abilities/GameplayAbility.h"
@@ -36,7 +37,7 @@ public:
 	virtual AActor* GetActor_Implementation() override;
 	virtual void Die() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
-	
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -78,7 +79,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Disolve")
 	TObjectPtr<UMaterialInstance> WeaponMaterial;
 	
-		
+	
 	void Dissolve();
 
 	UFUNCTION(BlueprintImplementableEvent)
@@ -90,6 +91,8 @@ protected:
 	virtual void InitializeDefaultAttributes() const;
 	void ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> EffectClass, float level) const;
 
+	UPROPERTY(EditAnywhere, Category="Combat")
+	UNiagaraSystem* BloodEffect;
 	
 	bool bDead = false;
 	/* End Combat Interface */
