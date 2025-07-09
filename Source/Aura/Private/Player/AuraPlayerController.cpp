@@ -144,8 +144,9 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				{CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];}
 			}
 			bAutoRunning = true;
-			FollowTime = 0.f;
+		
 		}
+		FollowTime = 0.f;
 	}
 }
 

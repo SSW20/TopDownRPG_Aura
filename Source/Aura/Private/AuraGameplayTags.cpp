@@ -128,6 +128,10 @@ void FAuraGameplayTags::InitializeGameplayTags()
 	GameplayTags.Socket_RightHand = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Socket.RightHand"),
 		FString("Socket")
+		);
+	GameplayTags.Socket_Tail = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Socket.Tail"),
+		FString("Socket")
 	);
 
 	// Attack			 GameplayCue에서 사용, Wait에서 기다림
