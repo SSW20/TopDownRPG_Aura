@@ -51,7 +51,7 @@ void AAuraCharacterBase::AddGameplayAbilities() const
 FVector AAuraCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& Tag)
 {
 	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get();
-	if (Tag.MatchesTagExact(GameplayTags.Socket_Weapon) && IsValid(Weapon))
+	if (IsValid(Weapon) && Tag.MatchesTagExact(GameplayTags.Socket_Weapon))
 	{
 		return Weapon->GetSocketLocation(WeaponSocketName);
 	}
@@ -120,6 +120,16 @@ FTaggedMontage AAuraCharacterBase::GetTaggedMontageByTag_Implementation(const FG
 		}
 	}
 	return FTaggedMontage();
+}
+
+int32 AAuraCharacterBase::GetSummonCount_Implementation()
+{
+	return SummonCount;
+}
+
+void AAuraCharacterBase::IncreaseSummonCount_Implementation(int32 AddValue)
+{
+	SummonCount += AddValue;
 }
 
 void AAuraCharacterBase::MulticastHandleDeath_Implementation()

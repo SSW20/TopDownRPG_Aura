@@ -73,7 +73,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(ResistanceCaptureDef, EvaluateParams, TargetResistance);
 		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
 
-		float TargetDamage = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag);
+		float TargetDamage = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false);
 		TargetDamage *= (100.f - TargetResistance) / 100.f;
 
 		Damage += TargetDamage;

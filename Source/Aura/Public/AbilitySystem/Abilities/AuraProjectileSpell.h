@@ -27,7 +27,7 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData);
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
-	void SpawnProjectileInBluePrint(const FVector& TargetLocation);
+	void SpawnProjectileInBluePrint(const FVector& TargetLocation, const bool bIsPitched, const float Pitch);
 
 
 	

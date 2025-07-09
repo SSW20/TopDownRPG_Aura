@@ -39,6 +39,8 @@ public:
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& Tag) override;
+	virtual int32 GetSummonCount_Implementation() override;
+	virtual void IncreaseSummonCount_Implementation(int32 AddValue) override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -107,4 +109,7 @@ protected:
 	// Reliable : 이 네트워크 RPC 호출은 네트워크 상에서 발생하더라도 해당 함수 호출은 반드시 목적지에 도착하여 실행됨을 보장함.
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
+
+	// Minions
+	int32 SummonCount = 0;
 };

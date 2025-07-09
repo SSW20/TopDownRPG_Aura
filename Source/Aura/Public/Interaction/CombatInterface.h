@@ -60,7 +60,13 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	UNiagaraSystem* GetBloodEffect();
-
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	int32 GetSummonCount();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void IncreaseSummonCount(int32 AddValue);
+	
 	virtual void Die() = 0;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)

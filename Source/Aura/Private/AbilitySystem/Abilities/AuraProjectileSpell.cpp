@@ -22,7 +22,7 @@ void UAuraProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	*/
 }
 
-void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocation)
+void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocation, const bool bIsPitched, const float Pitch)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) return;
 
@@ -34,8 +34,12 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 
 	//TODO : Rotation값 설정
 	FRotator Rotation = (TargetLocation - SpawnLocation).Rotation();
-
 	SpawnTransform.SetRotation(Rotation.Quaternion());
+
+	if (bIsPitched)
+	{
+		Rotation.Pitch = Pitch;
+	}
 
 
 	//SpawnActorDeferred: 액터를 즉시 스폰하지 않고, 모든 속성을 설정한 후 나중에 FinishSpawning으로 스폰을 완료할 수 있게 해주는 함수
