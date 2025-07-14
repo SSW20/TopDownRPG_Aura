@@ -6,6 +6,7 @@
 #include "UI/WidgetController/AuraWidgetController.h"
 #include "GameplayEffect.h"
 #include "UI/Widget/AuraUserWidget.h"
+#include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "OverlayWidgetController.generated.h"
 
 USTRUCT(BlueprintType)
@@ -27,11 +28,12 @@ struct FUIWidgetRow : public FTableRowBase
 };
 
 
-
+struct FAuraAbilityInfo;
 
 //동적 멀티캐스트 델레게이트, 파라미터는 1개
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUIWidgetSignature, FUIWidgetRow, Row);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FAuraAbilityInfo&, Info);
 
 //블루프린트에서 사용 가능
 UCLASS(Blueprintable, BlueprintType)
@@ -56,12 +58,21 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Message")
 	FUIWidgetSignature UIWidget;
 
+	UPROPERTY(BlueprintAssignable, Category="GAS|Messages")
+	FAbilityInfoSignature AbilityInfoDelegate;
+	
 protected:
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
-
+	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UDataTable> MessageDataTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
+	TObjectPtr<class UAbilityInfo> AbilityInfo;
+
+	void BindStartupAbilities(UAuraAbilitySystemComponent* ASC);
+	
 };
 
 template<typename T>

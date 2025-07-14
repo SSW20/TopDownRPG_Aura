@@ -9,21 +9,40 @@
 /**
  * 
  */
+// FForEachAbility: const FGameplayAbilitySpec& 타입의 매개변수 하나를 받는 싱글캐스트 델리게이트
+// 이 델리게이트는 어빌리티 목록을 순회하며 각 어빌리티 스펙에 대해 특정 작업을 수행할 때 사용
 
+//FAbilitiesGiven: UAuraAbilitySystemComponent* 타입의 매개변수 하나를 받는 멀티캐스트 델리게이트
+// 이 델리게이트는 주로 어빌리티가 부여되었음을 알리는 이벤트에 사용
+
+class UAuraAbilitySystemComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FAbilitiesGiven, UAuraAbilitySystemComponent*)
+DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
+
 
 UCLASS()
 class AURA_API UAuraAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 public:
-	void AbilityActorInfoSet();
 	FEffectAssetTags EffectAssetTags;
+	FAbilitiesGiven AbilitiesGivenDelegate;
+	bool bIsStartUpAbilitiesBroadCasted = false;
+	
+	void AbilityActorInfoSet();
 	void AddGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& GameplayAbilities);
+	void ForEachAbility(const FForEachAbility& ForEachDelegate);
+	
+	FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& Spec);
+	FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec);
+		
 	void PlayIfHeld(const FGameplayTag& InputTag);
 	void PlayIfReleased(const FGameplayTag& InputTag);
 protected:
 	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle);
+
+	virtual void OnRep_ActivateAbilities() override;
 private:
 
 };
