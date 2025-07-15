@@ -18,7 +18,9 @@
 // _OneParam: 하나의 매개변수를 가집니다.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCooldownSignature, float, TimeRemaining);
 
-UCLASS()
+//ExposedAsyncProxy : UBlueprintAsyncActionBase를 상속받는 비동기 태스크 클래스에 사용
+//블루프린트에서 타입으로 사용될 수 있으며, 특히 비동기 블루프린트 노드를 생성할 때 이 클래스가 그 노드의 동작을 제어하는 프록시 역할을 한다는 것을 언리얼 엔진에 명시적으로 알려주는 역할
+UCLASS(BlueprintType, meta = (ExposedAsyncProxy = "AsyncTask"))
 class AURA_API UWaitCooldownTask : public UBlueprintAsyncActionBase
 {
     GENERATED_BODY() // 언리얼 엔진 리플렉션 시스템을 위한 필수 매크로

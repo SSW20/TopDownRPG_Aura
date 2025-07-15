@@ -5,6 +5,7 @@
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "AbilitySystem/AuraAttributeSet.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "Player/AuraPlayerState.h"
 
 void UOverlayWidgetController::BroadcastInitialValues()
 {
@@ -31,6 +32,14 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 		{
 			AuraASC->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::BindStartupAbilities);
 		}
+	}
+
+	AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
+	if (AuraPS)
+	{
+		// Aura Player State의 변수 Exp와 Level의 변경을 감지하여 콜백함수를 바인드
+		AuraPS->ExpChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnExpChange);
+		AuraPS->LevelChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnLevelChange);
 	}
 	
 	UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
@@ -82,4 +91,32 @@ void UOverlayWidgetController::BindStartupAbilities(UAuraAbilitySystemComponent*
 	// ASC의 ForEachAbility 함수를 호출하여, 현재 활성화 가능한 모든 어빌리티에 대해
 	// 위에서 정의한 ForEachDelegate 람다를 실행하도록 지시합니다.
 	ASC->ForEachAbility(ForEachDelegate);
+}
+
+// Player State의 LevelInfo를 받아 현재 Exp Percent를 계산하여 UI에 BroadCast
+void UOverlayWidgetController::OnExpChange(int32 Exp)
+{
+	const AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
+	ULevelUpInfo* LevelInfo = AuraPS->LevelUpInfo;
+	check(LevelInfo);
+
+	const int32 CurrentLevel = LevelInfo->GetLevelByExpAmount(Exp);
+	const int32 MaxLevel = LevelInfo->LevelUpInfos.Num()-1;
+
+	if (CurrentLevel <= MaxLevel && CurrentLevel > 0)
+	{
+		int32 CurrentLevelExpAmount = LevelInfo->LevelUpInfos[CurrentLevel].LevelUpExpAmount;
+		int32 PrevLevelExpAmount = LevelInfo->LevelUpInfos[CurrentLevel-1].LevelUpExpAmount;
+		int32 DeltaExpAmount = CurrentLevelExpAmount - PrevLevelExpAmount;
+
+		int32 CurrentDeltaExpAmount = Exp - PrevLevelExpAmount;
+		const float ExpPercent = static_cast<float>(CurrentDeltaExpAmount) / static_cast<float>(DeltaExpAmount);
+
+		ExpChangeDelegate.Broadcast(ExpPercent);
+	}
+
+}
+void UOverlayWidgetController::OnLevelChange(int32 Level)
+{
+	
 }

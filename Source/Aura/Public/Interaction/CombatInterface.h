@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"	
 #include "Animation/AnimMontage.h"
 #include "GameplayTagContainer.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "CombatInterface.generated.h"
 
 // This class does not need to be modified.
@@ -74,4 +75,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
 	FTaggedMontage GetTaggedMontageByTag(const FGameplayTag& Tag);
+
+	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
+	ECharacterClass GetCharacterClass();
 };

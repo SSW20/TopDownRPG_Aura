@@ -46,6 +46,7 @@ void AAuraCharacterBase::AddGameplayAbilities() const
 
 	UAuraAbilitySystemComponent* AuraASC = CastChecked<UAuraAbilitySystemComponent>(AbilitySystemComponent);
 	AuraASC->AddGameplayAbilities(StartGameplayAbilities);
+	AuraASC->AddPassiveGameplayAbilities(StartPassiveGameplayAbilities);
 }
 
 FVector AAuraCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& Tag)
@@ -130,6 +131,11 @@ int32 AAuraCharacterBase::GetSummonCount_Implementation()
 void AAuraCharacterBase::IncreaseSummonCount_Implementation(int32 AddValue)
 {
 	SummonCount += AddValue;
+}
+
+ECharacterClass AAuraCharacterBase::GetCharacterClass_Implementation()
+{
+	return CharacterClass;
 }
 
 void AAuraCharacterBase::MulticastHandleDeath_Implementation()

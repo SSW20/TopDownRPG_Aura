@@ -28,6 +28,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> ClassAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	FScalableFloat ExpReward;
 };
 
 UCLASS()

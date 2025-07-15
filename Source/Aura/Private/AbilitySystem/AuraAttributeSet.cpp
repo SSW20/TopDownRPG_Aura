@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Character/AuraCharacterBase.h"
 #include "AuraGameplayTags.h"
+#include "Aura/AuraLogChannels.h"
+#include "Interaction/PlayerInterface.h"
 #include "Player/AuraPlayerController.h"
 
 UAuraAttributeSet::UAuraAttributeSet()
@@ -178,6 +180,8 @@ void UAuraAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& O
 }
 
 
+
+
 void UAuraAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue)  const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
@@ -200,7 +204,18 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
 
-
+	// 메타데이터 : IncomingExp, IncomingDamage ==> 이들은 복제 되지 않고 값을 받은 후 바로 0으로 세팅
+	if(Data.EvaluatedData.Attribute == GetIncomingExpAttribute())
+	{
+		float LocalIncomingExp = GetIncomingExp();
+		SetIncomingExp(0);
+		
+		if (Props.SourceCharacter->Implements<UPlayerInterface>())
+		{
+			IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
+		}
+	}
+	
 	
 	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
@@ -209,16 +224,9 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		
 		float NewHealth = GetHealth() - IncomeDamage;
 		bool bIsDead = false;
-		UE_LOG(LogTemp, Log, TEXT("%f"), GetHealth());
+
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		// const float IncomeDamage = GetIncomingDamage();
-		// SetIncomingDamage(0.f);
-		//
-		// float NewHealth = GetHealth() - IncomeDamage;
-		// bool bIsDead = false;
-		//
-		// SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-		//
+
 		if (NewHealth <= 0)
 			bIsDead = true;
 		
@@ -235,6 +243,8 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			{
 				Target->Die();
 			}
+			SendExp(Props);
+			
 		}
 
 		if (Props.TargetCharacter != Props.SourceCharacter)
@@ -287,3 +297,23 @@ void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 		Props.TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Props.TargetAvatarActor);
 	}
 }
+
+// 실제로 Props의 데이터를 읽어와 GameplayEvent를 보냄 --> 이후 GA_Event_Listen의 WaitGameplayEvent로 연결됨
+void UAuraAttributeSet::SendExp(FEffectProperties& Props)
+{
+	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
+	{
+		const ECharacterClass ChracterClass = ICombatInterface::Execute_GetCharacterClass(Props.TargetCharacter);
+		const float Level = CombatInterface->GetPlayerLevel();
+		const int32 Exp = UAuraAbilitySystemLibrary::GetExpRewardByClassAndLevel(Props.TargetCharacter, ChracterClass, Level);
+
+		const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();
+		
+		FGameplayEventData Payload;
+		Payload.EventTag = Tags.Attributes_Meta_IncomingExp;
+		Payload.EventMagnitude = Exp;
+		
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Props.SourceCharacter, Tags.Attributes_Meta_IncomingExp, Payload);
+	}
+}
+

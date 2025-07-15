@@ -41,6 +41,8 @@ public:
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& Tag) override;
 	virtual int32 GetSummonCount_Implementation() override;
 	virtual void IncreaseSummonCount_Implementation(int32 AddValue) override;
+	virtual ECharacterClass GetCharacterClass_Implementation() override;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -74,7 +76,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartGameplayAbilities;
-
+	
+	UPROPERTY(EditDefaultsOnly, Category="Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartPassiveGameplayAbilities;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Anime")
 	TObjectPtr<UAnimMontage> HitReaction;
 
@@ -83,6 +88,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Disolve")
 	TObjectPtr<UMaterialInstance> WeaponMaterial;
 	
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
+	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 	
 	void Dissolve();
 

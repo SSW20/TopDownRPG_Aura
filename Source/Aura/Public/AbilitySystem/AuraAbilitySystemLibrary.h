@@ -51,4 +51,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayMechanics")
 	static bool IsFriend(AActor* FirstActor, AActor* SecondActor);
+
+	static int32 GetExpRewardByClassAndLevel(const UObject* WorldContext, ECharacterClass CharacterClass, float Level);
 };

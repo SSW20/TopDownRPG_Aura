@@ -32,6 +32,7 @@ public:
 	
 	void AbilityActorInfoSet();
 	void AddGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& GameplayAbilities);
+	void AddPassiveGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassiveGameplayAbilities);
 	void ForEachAbility(const FForEachAbility& ForEachDelegate);
 	
 	FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& Spec);

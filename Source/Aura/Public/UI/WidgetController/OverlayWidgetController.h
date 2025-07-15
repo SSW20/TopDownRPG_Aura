@@ -7,6 +7,7 @@
 #include "GameplayEffect.h"
 #include "UI/Widget/AuraUserWidget.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
 #include "OverlayWidgetController.generated.h"
 
 USTRUCT(BlueprintType)
@@ -61,6 +62,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GAS|Messages")
 	FAbilityInfoSignature AbilityInfoDelegate;
 	
+	UPROPERTY(BlueprintAssignable, Category="Exp")
+	FOnAttributeChangedSignature ExpChangeDelegate;
+
 protected:
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
@@ -70,10 +74,14 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
 	TObjectPtr<class UAbilityInfo> AbilityInfo;
-
-	void BindStartupAbilities(UAuraAbilitySystemComponent* ASC);
 	
+	void BindStartupAbilities(UAuraAbilitySystemComponent* ASC);
+
+	void OnExpChange(int32 Exp);
+	void OnLevelChange(int32 Level);
 };
+
+
 
 template<typename T>
 T* UOverlayWidgetController::GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag)

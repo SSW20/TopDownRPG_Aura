@@ -101,8 +101,16 @@ void FAuraGameplayTags::InitializeGameplayTags()
 	FName("Attributes.Resistance.Physical"),
 	FString("Physical Damage Resistance")
 	);
+	
+	/*
+	 *  Meta Attributes
+	 */
+	GameplayTags.Attributes_Meta_IncomingExp = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Attributes.Meta.IncomingExp"),
+	FString("Incoming Exp Attribute")
+	);
 
-
+	
 	// MAP DamageType To DamageResistance
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Fire, GameplayTags.Attributes_Resistance_Fire);
 	GameplayTags.DamageTypesToResistances.Add(GameplayTags.Damage_Lightning, GameplayTags.Attributes_Resistance_Lightning);

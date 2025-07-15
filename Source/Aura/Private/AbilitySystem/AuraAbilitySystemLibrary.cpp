@@ -184,3 +184,15 @@ bool UAuraAbilitySystemLibrary::IsFriend(AActor* FirstActor, AActor* SecondActor
 
 	return bIsPlayerFriend || bIsEnemyFriend;
 }
+
+int32 UAuraAbilitySystemLibrary::GetExpRewardByClassAndLevel(const UObject* WorldContext, ECharacterClass CharacterClass, float Level)
+{
+	AAuraGameModeBase* AuraGamemode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(WorldContext));
+	check(AuraGamemode);
+
+	UCharacterClassInfo* CharacterInfo = AuraGamemode->CharacterInfoClass;
+	const FCharacterClassDefaultInfo& ClassInfo = CharacterInfo->GetCharacterDefaultInfo(CharacterClass);
+
+	int32 ClassExp = static_cast<int32>(ClassInfo.ExpReward.GetValueAtLevel(Level));
+	return ClassExp;
+}

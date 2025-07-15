@@ -44,6 +44,17 @@ void UAuraAbilitySystemComponent::AddGameplayAbilities(const TArray<TSubclassOf<
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
+// StartUP 의 Passive Ability를 설정해줌 --> EX ) 경험치를 받는 어빌리티
+void UAuraAbilitySystemComponent::AddPassiveGameplayAbilities(
+	const TArray<TSubclassOf<UGameplayAbility>>& PassiveGameplayAbilities)
+{
+	for (const TSubclassOf<UGameplayAbility> AbilityClass : PassiveGameplayAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}
+}
+
 //활성화 가능한 모든 어빌리티 스펙을 순회하며 주어진 델리게이트를 실행하는 함수
 void UAuraAbilitySystemComponent::ForEachAbility(const FForEachAbility& ForEachDelegate)
 {
@@ -60,7 +71,7 @@ void UAuraAbilitySystemComponent::ForEachAbility(const FForEachAbility& ForEachD
 		}
 	}
 }
-
+// GameplayAbilitySpec을 통해 Input Tag를 가져옴
 FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& Spec)
 {
 	for (FGameplayTag Tag : Spec.DynamicAbilityTags)
@@ -73,7 +84,7 @@ FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbi
 	return FGameplayTag();
 }
 
-
+// GameplayAbilitySpec을 통해 Ability Tag를 가져옴
 FGameplayTag UAuraAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec)
 {
 	for (FGameplayTag Tag : Spec.Ability.Get()->AbilityTags)

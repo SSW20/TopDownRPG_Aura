@@ -19,6 +19,8 @@
 
 //DECLARE_DELEGATE_RetVal() << TBaseStaticDelegateInstance로 대체
 
+
+// Source는 가해자 , Target은 피해자
 USTRUCT()
 struct FEffectProperties
 {
@@ -167,6 +169,9 @@ public:
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, IncomingDamage);
 
+	UPROPERTY(BlueprintReadOnly, Category="Meta Data")
+	FGameplayAttributeData IncomingExp;
+	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, IncomingExp);
 	/*                             
 			Damage Resistance
 	*/	
@@ -185,7 +190,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_PhysicalResistance,Category="Damage Resistance")
 	FGameplayAttributeData PhysicalResistance;
 	ATTRIBUTE_ACCESSORS(UAuraAttributeSet, PhysicalResistance);
-
+	
+	
 	
 	// 인자를 0 ~ 1개 받을 수 있음 -> 업데이트 이전 값이 들어감
 
@@ -244,6 +250,8 @@ public:
 	UFUNCTION()
 	void OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const;
 
+
 private:
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+	void SendExp(FEffectProperties& Props);
 };

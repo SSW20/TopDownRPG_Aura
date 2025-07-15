@@ -33,9 +33,40 @@ void AAuraPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AAuraPlayerState, Level);
+	DOREPLIFETIME(AAuraPlayerState, Exp);
+}
+
+//  Level 이 바뀌거나 Exp가 바뀌는 것을 모두 이 함수들로 구현 --> 이후 OverlayWidgetController의 콜백함수로 바인드 됨
+void AAuraPlayerState::SetLevel(int32 NewLevel)
+{
+	Level = NewLevel;
+	LevelChangeDelegate.Broadcast(Level);
+}
+
+void AAuraPlayerState::AddToLevel(int32 NewLevel)
+{
+	Level += NewLevel;
+	LevelChangeDelegate.Broadcast(Level);
+}
+
+void AAuraPlayerState::SetExp(int32 NewExp)
+{
+	Exp = NewExp;
+	ExpChangeDelegate.Broadcast(Exp);
+}
+
+void AAuraPlayerState::AddToExp(int32 NewExp)
+{
+	Exp += NewExp;
+	ExpChangeDelegate.Broadcast(Exp);
 }
 
 void AAuraPlayerState::OnRep_Level(int32 OldLevel)
 {
+	LevelChangeDelegate.Broadcast(Level);
+}
 
+void AAuraPlayerState::OnRep_Exp(int32 OldExp)
+{
+	ExpChangeDelegate.Broadcast(Exp);
 }

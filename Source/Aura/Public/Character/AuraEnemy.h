@@ -67,9 +67,6 @@ protected:
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
 	float LifeSpan = 5.f;
 
-	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
-	ECharacterClass CharacterClass = ECharacterClass::Warrior;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget")
 	TObjectPtr<UWidgetComponent> HealthBarWidgetComponent;
 
