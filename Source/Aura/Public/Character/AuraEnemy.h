@@ -39,7 +39,7 @@ public:
 	TObjectPtr<AActor> CombatTarget;
 	
 	// Start Combat Interface
-	virtual int32 GetPlayerLevel() const override;
+	virtual int32 GetPlayerLevel_Implementation() const override;
 
 	// End Combat Interface
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")

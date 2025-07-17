@@ -77,7 +77,7 @@ void AAuraCharacter::OnRep_PlayerState()
 	InitAbilityActorInfo();
 }
 
-int32 AAuraCharacter::GetPlayerLevel() const
+int32 AAuraCharacter::GetPlayerLevel_Implementation() const
 {
 	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
 	check(AuraPlayerState);
@@ -89,6 +89,11 @@ void AAuraCharacter::AddExp_Implementation(int32 Exp)
 	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
 	check(AuraPlayerState);
 	AuraPlayerState->AddToExp(Exp);
+}
+
+void AAuraCharacter::LevelUp_Implementation()
+{
+	IPlayerInterface::LevelUp_Implementation();
 }
 
 

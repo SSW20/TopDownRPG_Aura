@@ -301,10 +301,16 @@ void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 // 실제로 Props의 데이터를 읽어와 GameplayEvent를 보냄 --> 이후 GA_Event_Listen의 WaitGameplayEvent로 연결됨
 void UAuraAttributeSet::SendExp(FEffectProperties& Props)
 {
-	if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
+	if (Props.TargetCharacter->Implements<UCombatInterface>())
 	{
 		const ECharacterClass ChracterClass = ICombatInterface::Execute_GetCharacterClass(Props.TargetCharacter);
-		const float Level = CombatInterface->GetPlayerLevel();
+		
+		int32 Level = 1;
+	
+		if (Props.SourceCharacter->Implements<UCombatInterface>())
+		{
+			Level = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+		}
 		const int32 Exp = UAuraAbilitySystemLibrary::GetExpRewardByClassAndLevel(Props.TargetCharacter, ChracterClass, Level);
 
 		const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();

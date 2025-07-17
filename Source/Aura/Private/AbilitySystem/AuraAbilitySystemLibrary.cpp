@@ -88,10 +88,9 @@ void UAuraAbilitySystemLibrary::InitDefaultAbilities(const UObject* WorldContext
 	const FCharacterClassDefaultInfo& ClassInfo = CharacterInfo->GetCharacterDefaultInfo(CharacterClass);
 	for (TSubclassOf<UGameplayAbility> ClassAbility : ClassInfo.ClassAbilities)
 	{
-		ICombatInterface* Enemy = Cast<ICombatInterface>(ASC->GetAvatarActor());
-		if (Enemy)
+		if (ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
-			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(ClassAbility, Enemy->GetPlayerLevel());
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(ClassAbility, ICombatInterface::Execute_GetPlayerLevel(ASC->GetAvatarActor()));
 			{
 				ASC->GiveAbility(AbilitySpec);
 			}
@@ -185,6 +184,7 @@ bool UAuraAbilitySystemLibrary::IsFriend(AActor* FirstActor, AActor* SecondActor
 	return bIsPlayerFriend || bIsEnemyFriend;
 }
 
+// CharacterClass 와 Level을 받으면 그에 맞는 ScalableFloat인 EXP를 받음
 int32 UAuraAbilitySystemLibrary::GetExpRewardByClassAndLevel(const UObject* WorldContext, ECharacterClass CharacterClass, float Level)
 {
 	AAuraGameModeBase* AuraGamemode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(WorldContext));
