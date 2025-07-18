@@ -14,6 +14,10 @@ void UOverlayWidgetController::BroadcastInitialValues()
 	OnMaxHealthChanged.Broadcast(AuraAttributeSet->GetMaxHealth());
 	OnManaChanged.Broadcast(AuraAttributeSet->GetMana());
 	OnMaxManaChanged.Broadcast(AuraAttributeSet->GetMaxMana());
+	
+	AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
+	AuraPS->ExpChangeDelegate.Broadcast(AuraPS->GetExp());
+	AuraPS->LevelChangeDelegate.Broadcast(AuraPS->GetPlayerLevel());
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
@@ -118,5 +122,5 @@ void UOverlayWidgetController::OnExpChange(int32 Exp)
 }
 void UOverlayWidgetController::OnLevelChange(int32 Level)
 {
-	
+	LevelChangeDelegate.Broadcast(Level);
 }

@@ -34,6 +34,8 @@ void AAuraPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(AAuraPlayerState, Level);
 	DOREPLIFETIME(AAuraPlayerState, Exp);
+	DOREPLIFETIME(AAuraPlayerState, AttributePoint);
+	DOREPLIFETIME(AAuraPlayerState, SkillPoint);
 }
 
 //  Level 이 바뀌거나 Exp가 바뀌는 것을 모두 이 함수들로 구현 --> 이후 OverlayWidgetController의 콜백함수로 바인드 됨
@@ -61,6 +63,18 @@ void AAuraPlayerState::AddToExp(int32 NewExp)
 	ExpChangeDelegate.Broadcast(Exp);
 }
 
+void AAuraPlayerState::AddAttributePoint(int32 NewAttributePoint)
+{
+	AttributePoint += NewAttributePoint;
+	AttributePointChangeDelegate.Broadcast(AttributePoint);
+}
+
+void AAuraPlayerState::AddSkillPoint(int32 NewSkillPoint)
+{
+	SkillPoint += SkillPoint;
+	SkillPointChangeDelegate.Broadcast(SkillPoint);
+}
+
 void AAuraPlayerState::OnRep_Level(int32 OldLevel)
 {
 	LevelChangeDelegate.Broadcast(Level);
@@ -69,4 +83,14 @@ void AAuraPlayerState::OnRep_Level(int32 OldLevel)
 void AAuraPlayerState::OnRep_Exp(int32 OldExp)
 {
 	ExpChangeDelegate.Broadcast(Exp);
+}
+
+void AAuraPlayerState::OnRep_AttributePoint(int32 OldAttributePoint)
+{
+	AttributePointChangeDelegate.Broadcast(OldAttributePoint);
+}
+
+void AAuraPlayerState::OnRep_SkillPoint(int32 OldSkillPoint)
+{
+	SkillPointChangeDelegate.Broadcast(OldSkillPoint);
 }

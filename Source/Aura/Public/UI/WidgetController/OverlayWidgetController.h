@@ -7,7 +7,6 @@
 #include "GameplayEffect.h"
 #include "UI/Widget/AuraUserWidget.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
-#include "AbilitySystem/Data/LevelUpInfo.h"
 #include "OverlayWidgetController.generated.h"
 
 USTRUCT(BlueprintType)
@@ -32,6 +31,7 @@ struct FUIWidgetRow : public FTableRowBase
 struct FAuraAbilityInfo;
 
 //동적 멀티캐스트 델레게이트, 파라미터는 1개
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChanged, int32, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUIWidgetSignature, FUIWidgetRow, Row);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FAuraAbilityInfo&, Info);
@@ -64,6 +64,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category="Exp")
 	FOnAttributeChangedSignature ExpChangeDelegate;
+
+	UPROPERTY(BlueprintAssignable, Category="Stat")
+	FOnPlayerStatChanged LevelChangeDelegate;
 
 protected:
 	template<typename T>

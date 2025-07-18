@@ -8,6 +8,9 @@
 #include "AbilitySystem/AuraAttributeSet.h"
 #include "Player/AuraPlayerController.h"
 #include "UI/HUD/AuraHUD.h"
+#include "NiagaraComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 AAuraCharacter::AAuraCharacter()
 {
 	// 움직임 같은 것은 최대한 BeginPlay에 넣자 --> Null이 아니더라도 초기화가 진행중에 덮어씌워질 수 있다.
@@ -23,6 +26,19 @@ AAuraCharacter::AAuraCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
+	LevelUpNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("LevelUpNiagaraComponent");
+	LevelUpNiagaraComponent->SetupAttachment(GetRootComponent());
+	LevelUpNiagaraComponent->bAutoActivate = false;
+
+	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>("CameraSpringArm");
+	CameraSpringArm->SetupAttachment(GetRootComponent());
+	CameraSpringArm->SetUsingAbsoluteRotation(true);
+	CameraSpringArm->bDoCollisionTest = false;
+
+	TopDownCameraComponent = CreateDefaultSubobject<UCameraComponent>("TopDownCameraComponent");
+	TopDownCameraComponent->SetupAttachment(CameraSpringArm, USpringArmComponent::SocketName);
+	TopDownCameraComponent->bUsePawnControlRotation = false;
 }
 void AAuraCharacter::BeginPlay()
 {
@@ -59,6 +75,19 @@ void AAuraCharacter::InitAbilityActorInfo()
 	InitializeDefaultAttributes();
 }
 
+void AAuraCharacter::MulticastLevelUpParticles_Implementation() const
+{
+	if (IsValid(LevelUpNiagaraComponent))
+	{
+		FVector CameraLocation = TopDownCameraComponent->GetComponentLocation();
+		FVector NiagaraLocation = LevelUpNiagaraComponent->GetComponentLocation();
+		FRotator SpawnRotation = (CameraLocation - NiagaraLocation).Rotation();
+
+		LevelUpNiagaraComponent->SetWorldRotation(SpawnRotation);
+		LevelUpNiagaraComponent->Activate(true);
+	}
+}
+
 //폰이 새로운 컨트롤러에 의해 점유될 때 서버에서 호출되는 함수
 void AAuraCharacter::PossessedBy(AController* NewController)
 {
@@ -93,7 +122,70 @@ void AAuraCharacter::AddExp_Implementation(int32 Exp)
 
 void AAuraCharacter::LevelUp_Implementation()
 {
-	IPlayerInterface::LevelUp_Implementation();
+	MulticastLevelUpParticles_Implementation();
+}
+
+void AAuraCharacter::AddLevel_Implementation(int32 Level)
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	AuraPlayerState->AddToLevel(Level);
+}
+
+int32 AAuraCharacter::GetExp_Implementation() const
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->GetExp();
+}
+
+int32 AAuraCharacter::GetLevelByExp_Implementation(int32 Exp)
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->LevelUpInfo->GetLevelByExpAmount(Exp);
+}
+
+int32 AAuraCharacter::GetAttributePointReward_Implementation(int32 Level) const
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->LevelUpInfo->LevelUpInfos[Level].AttributePoint;
+}
+
+void AAuraCharacter::AddAttributePoint_Implementation(int32 Point)
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	AuraPlayerState->AddAttributePoint(Point);
+}
+
+int32 AAuraCharacter::GetSkillPointReward_Implementation(int32 Level) const
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->LevelUpInfo->LevelUpInfos[Level].SkillPoint;
+}
+
+void AAuraCharacter::AddSkillPoint_Implementation(int32 Point)
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	AuraPlayerState->AddSkillPoint(Point);
+}
+
+int32 AAuraCharacter::GetSkillPoint_Implementation() const
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->GetSkillPoint();
+}
+
+int32 AAuraCharacter::GetAttributePoint_Implementation() const
+{
+	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
+	check(AuraPlayerState);
+	return AuraPlayerState->GetAttributePoint();
 }
 
 

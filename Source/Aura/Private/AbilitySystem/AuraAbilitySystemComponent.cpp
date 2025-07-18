@@ -2,9 +2,13 @@
 
 
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AuraGameplayTags.h"
 #include "AbilitySystem/Abilities/AuraGameplayAbility.h"
 #include "Aura/AuraLogChannels.h"
+#include "Interaction/CombatInterface.h"
+#include "Interaction/PlayerInterface.h"
 
 void UAuraAbilitySystemComponent::AbilityActorInfoSet()
 {
@@ -131,4 +135,30 @@ void UAuraAbilitySystemComponent::PlayIfReleased(const FGameplayTag& InputTag)
 			AbilitySpecInputReleased(AbilitySpec);
 		}
 	}
+}
+
+void UAuraAbilitySystemComponent::UpgradeAttributes(const FGameplayTag& Tag)
+{
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		// Attribute Point가 있을 시 서버 호출 --> 불필요한 함수 호출 없앰
+		if (IPlayerInterface::Execute_GetAttributePoint(GetAvatarActor()) > 0)
+		{
+			ServerUpgradeAttribute(Tag);
+		}
+	}
+}
+
+void UAuraAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGameplayTag& Tag)
+{
+	FGameplayEventData Payload;
+	Payload.EventTag = Tag;
+	Payload.EventMagnitude = 1.f;
+
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddAttributePoint(GetAvatarActor(),-1);
+	}
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), Tag, Payload);
 }

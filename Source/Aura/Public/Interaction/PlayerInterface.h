@@ -35,5 +35,32 @@ public:
 	void AddExp(int32 Exp);
 
 	UFUNCTION(BlueprintNativeEvent)
+	int32 GetExp() const;
+
+	UFUNCTION(BlueprintNativeEvent)
+	int32 GetLevelByExp(int32 Exp);
+
+	UFUNCTION(BlueprintNativeEvent)
 	void LevelUp();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void AddLevel(int32 Level);
+
+	UFUNCTION(BlueprintNativeEvent)
+	int32 GetAttributePointReward(int32 Level) const;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void AddAttributePoint(int32 Point);
+
+	UFUNCTION(BlueprintNativeEvent)
+	int32 GetSkillPointReward(int32 Level) const;
+
+	UFUNCTION(BlueprintNativeEvent)
+	void AddSkillPoint(int32 Point);
+
+	UFUNCTION(BlueprintNativeEvent)
+	int32 GetAttributePoint() const;
+
+	UFUNCTION(BlueprintNativeEvent)
+	int32 GetSkillPoint() const;
 };

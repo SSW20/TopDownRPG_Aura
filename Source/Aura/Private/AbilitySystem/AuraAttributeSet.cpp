@@ -213,6 +213,30 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		if (Props.SourceCharacter->Implements<UPlayerInterface>())
 		{
 			IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
+
+			//	Level Up 계산 
+			int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+			int32 CurrentExp = IPlayerInterface::Execute_GetExp(Props.SourceCharacter);
+
+			int32 NewLevel = IPlayerInterface::Execute_GetLevelByExp(Props.SourceCharacter, CurrentExp + LocalIncomingExp);
+			// Level Up
+			if (NewLevel > CurrentLevel)
+			{
+				int32 AttributePoint = IPlayerInterface::Execute_GetAttributePointReward(Props.SourceCharacter, NewLevel);
+				int32 SkillPoint = IPlayerInterface::Execute_GetSkillPointReward(Props.SourceCharacter, NewLevel);
+
+				// Add Attribute Point, Skill Point, Level
+				IPlayerInterface::Execute_AddAttributePoint(Props.SourceCharacter, AttributePoint);
+				IPlayerInterface::Execute_AddSkillPoint(Props.SourceCharacter, SkillPoint);
+				IPlayerInterface::Execute_AddLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
+				
+				// Update Mana, Health To Max
+				bIsMaxHealth = true;
+				bIsMaxMana = true;
+				
+				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
+			}
+			
 		}
 	}
 	
@@ -263,6 +287,22 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			}
 		}
 	}
+}
+
+void UAuraAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	if (Attribute == GetMaxManaAttribute() && bIsMaxMana)
+	{
+		SetMana(GetMaxMana());
+		bIsMaxMana = false;
+	}
+	if (Attribute == GetMaxHealthAttribute() && bIsMaxHealth)
+	{
+		SetHealth(GetMaxHealth());
+		bIsMaxHealth = false;
+	}
+
 }
 
 void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const

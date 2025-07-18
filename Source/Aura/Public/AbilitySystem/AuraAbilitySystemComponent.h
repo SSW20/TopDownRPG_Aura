@@ -40,6 +40,11 @@ public:
 		
 	void PlayIfHeld(const FGameplayTag& InputTag);
 	void PlayIfReleased(const FGameplayTag& InputTag);
+
+	void UpgradeAttributes(const FGameplayTag& Tag);
+
+	UFUNCTION(Server,Reliable)
+	void ServerUpgradeAttribute(const FGameplayTag& Tag);
 protected:
 	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle);
 

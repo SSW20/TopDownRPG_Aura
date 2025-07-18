@@ -39,6 +39,16 @@ public:
 	FORCEINLINE int32 GetExp() const { return Exp; };
 	FPlayerStatChange ExpChangeDelegate;
 
+	/*		AttributePoint		*/
+	FPlayerStatChange AttributePointChangeDelegate;
+	FORCEINLINE int32 GetAttributePoint() const { return AttributePoint; };
+	void AddAttributePoint(int32 NewAttributePoint);
+
+	/*		SkillPoint			*/
+	FPlayerStatChange SkillPointChangeDelegate;
+	FORCEINLINE int32 GetSkillPoint() const { return SkillPoint; };
+	void AddSkillPoint(int32 NewSkillPoint);
+	
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<ULevelUpInfo> LevelUpInfo;
 protected:
@@ -52,11 +62,23 @@ private:
 	int32 Level = 1;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Exp)
-	int32 Exp = 1;
+	int32 Exp = 0;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_AttributePoint)
+	int32 AttributePoint = 0;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_SkillPoint)
+	int32 SkillPoint = 1;
 	
 	UFUNCTION()
 	void OnRep_Level(int32 OldLevel);
 
 	UFUNCTION()
 	void OnRep_Exp(int32 OldExp);
+
+	UFUNCTION()
+	void OnRep_AttributePoint(int32 OldAttributePoint);
+
+	UFUNCTION()
+	void OnRep_SkillPoint(int32 OldSkillPoint);
 };
