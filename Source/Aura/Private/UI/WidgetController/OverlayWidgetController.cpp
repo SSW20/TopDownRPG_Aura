@@ -9,51 +9,45 @@
 
 void UOverlayWidgetController::BroadcastInitialValues()
 {
-	UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
-	OnHealthChanged.Broadcast(AuraAttributeSet->GetHealth());
-	OnMaxHealthChanged.Broadcast(AuraAttributeSet->GetMaxHealth());
-	OnManaChanged.Broadcast(AuraAttributeSet->GetMana());
-	OnMaxManaChanged.Broadcast(AuraAttributeSet->GetMaxMana());
+	OnHealthChanged.Broadcast(GetAuraAttributeSet()->GetHealth());
+	OnMaxHealthChanged.Broadcast(GetAuraAttributeSet()->GetMaxHealth());
+	OnManaChanged.Broadcast(GetAuraAttributeSet()->GetMana());
+	OnMaxManaChanged.Broadcast(GetAuraAttributeSet()->GetMaxMana());
 	
-	AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
+	AAuraPlayerState* AuraPS = GetAuraPlayerState();
 	AuraPS->ExpChangeDelegate.Broadcast(AuraPS->GetExp());
 	AuraPS->LevelChangeDelegate.Broadcast(AuraPS->GetPlayerLevel());
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-	if (UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent))
+	//							두 가지 경우가 존재
+	// 1. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되기 전에 바인드 됨
+	// 2. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되고 난 뒤 바인드 됨
+	// 1번의 경우에는 적절하지만 2번의 경우는 문제가 생긴다 이미 BroadCast된 경우 바인드 하지 않고 콜백함수를 직접 호출하는 형식으로 변경
+	if (GetAuraAbilitySystemComponent()->bIsStartUpAbilitiesBroadCasted)
 	{
-		//							두 가지 경우가 존재
-		// 1. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되기 전에 바인드 됨
-		// 2. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되고 난 뒤 바인드 됨
-		// 1번의 경우에는 적절하지만 2번의 경우는 문제가 생긴다 이미 BroadCast된 경우 바인드 하지 않고 콜백함수를 직접 호출하는 형식으로 변경
-		if (AuraASC->bIsStartUpAbilitiesBroadCasted)
-		{
-			BindStartupAbilities(AuraASC);
-		}
-		else
-		{
-			AuraASC->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::BindStartupAbilities);
-		}
+		BroadcastAbilityInfo();
+	}
+	else
+	{
+		GetAuraAbilitySystemComponent()->AbilitiesGivenDelegate.AddUObject(
+			this, &UOverlayWidgetController::BroadcastAbilityInfo);
 	}
 
-	AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
-	if (AuraPS)
-	{
-		// Aura Player State의 변수 Exp와 Level의 변경을 감지하여 콜백함수를 바인드
-		AuraPS->ExpChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnExpChange);
-		AuraPS->LevelChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnLevelChange);
-	}
+
+	// Aura Player State의 변수 Exp와 Level의 변경을 감지하여 콜백함수를 바인드
+	GetAuraPlayerState()->ExpChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnExpChange);
+	GetAuraPlayerState()->LevelChangeDelegate.AddUObject(this, &UOverlayWidgetController::OnLevelChange);
 	
-	UAuraAttributeSet* AuraAttributeSet = CastChecked<UAuraAttributeSet>(AttributeSet);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetHealthAttribute()).
+	
+	GetAuraAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetHealthAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnHealthChanged.Broadcast(Data.NewValue); });
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxHealthAttribute()).
+	GetAuraAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxHealthAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnMaxHealthChanged.Broadcast(Data.NewValue); });
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetManaAttribute()).
+	GetAuraAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetManaAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnManaChanged.Broadcast(Data.NewValue); });
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxManaAttribute()).
+	GetAuraAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AuraAttributeSet->GetMaxManaAttribute()).
 		AddLambda([this](const FOnAttributeChangeData& Data) {OnMaxManaChanged.Broadcast(Data.NewValue); });
 
 	Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
@@ -75,33 +69,10 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	);
 }
 
-// ASC를 통해 모든 GA를 본 뒤 InputTag를 가져와 AbilityInfo 데이터 에셋에서 정보를 추가하여 블루프린트에 BroadCast
-void UOverlayWidgetController::BindStartupAbilities(UAuraAbilitySystemComponent* ASC)
-{
-	if (!ASC->bIsStartUpAbilitiesBroadCasted) return;
-	
-	// FForEachAbility 델리게이트 인스턴스를 생성
-	// 이 델리게이트는 UAuraAbilitySystemComponent::ForEachAbility 함수에 전달되어 각 활성화 가능한 어빌리티 스펙에 대해 실행될 콜백을 정의.
-	FForEachAbility ForEachDelegate;
-	ForEachDelegate.BindLambda([this, ASC](const FGameplayAbilitySpec& AbilitySpec)
-	{
-		FAuraAbilityInfo Info = AbilityInfo->FindAbilityInfoByTag(ASC->GetAbilityTagFromSpec(AbilitySpec));
-		Info.InputTag = ASC->GetInputTagFromSpec(AbilitySpec);
-
-		//완성된 FAuraAbilityInfo 정보를 AbilityInfoDelegate를 통해 블루프린트(UI)에 브로드캐스트하여 어빌리티 정보를 전달합니다.
-		AbilityInfoDelegate.Broadcast(Info);
-	});
-
-	// ASC의 ForEachAbility 함수를 호출하여, 현재 활성화 가능한 모든 어빌리티에 대해
-	// 위에서 정의한 ForEachDelegate 람다를 실행하도록 지시합니다.
-	ASC->ForEachAbility(ForEachDelegate);
-}
-
 // Player State의 LevelInfo를 받아 현재 Exp Percent를 계산하여 UI에 BroadCast
 void UOverlayWidgetController::OnExpChange(int32 Exp)
 {
-	const AAuraPlayerState* AuraPS = CastChecked<AAuraPlayerState>(PlayerState);
-	ULevelUpInfo* LevelInfo = AuraPS->LevelUpInfo;
+	ULevelUpInfo* LevelInfo = GetAuraPlayerState()->LevelUpInfo;
 	check(LevelInfo);
 
 	const int32 CurrentLevel = LevelInfo->GetLevelByExpAmount(Exp);

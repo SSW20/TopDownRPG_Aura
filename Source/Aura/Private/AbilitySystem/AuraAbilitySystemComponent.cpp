@@ -5,7 +5,9 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AuraGameplayTags.h"
+#include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "AbilitySystem/Abilities/AuraGameplayAbility.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "Aura/AuraLogChannels.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
@@ -29,7 +31,7 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 
 	if (!bIsStartUpAbilitiesBroadCasted)
 	{
-		AbilitiesGivenDelegate.Broadcast(this);
+		AbilitiesGivenDelegate.Broadcast();
 	}
 }
 
@@ -41,11 +43,12 @@ void UAuraAbilitySystemComponent::AddGameplayAbilities(const TArray<TSubclassOf<
 		if (const UAuraGameplayAbility* GA = Cast<UAuraGameplayAbility>(AbilitySpec.Ability))
 		{
 			AbilitySpec.DynamicAbilityTags.AddTag(GA->StartTag);
+			AbilitySpec.DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
 			GiveAbility(AbilitySpec);
 		}
 	}
 	bIsStartUpAbilitiesBroadCasted = true;
-	AbilitiesGivenDelegate.Broadcast(this);
+	AbilitiesGivenDelegate.Broadcast();
 }
 
 // StartUP 의 Passive Ability를 설정해줌 --> EX ) 경험치를 받는 어빌리티
@@ -75,6 +78,42 @@ void UAuraAbilitySystemComponent::ForEachAbility(const FForEachAbility& ForEachD
 		}
 	}
 }
+
+// Ability Info 에서 Ability를 찾고 이미 부여된 Ability라면 무시
+void UAuraAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
+{
+	UAbilityInfo* AbilityInfo = UAuraAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+	for (const FAuraAbilityInfo& Info : AbilityInfo->AbilityInfos)
+	{
+		if (!IsValid(Info.Ability) || !IsValid(Info.Ability)) continue;
+		//해당 Ability의 레벨을 플레이어가 넘었는지 확인
+		if (Info.LevelRequired > Level) continue;
+		if (GetSpecFromAbilityTag(Info.AbilityTag) == nullptr)
+		{
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Info.Ability, 1);
+			AbilitySpec.DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Eligible);
+			GiveAbility(AbilitySpec);
+			// Ability Spec 강제 복제
+			MarkAbilitySpecDirty(AbilitySpec);
+		}
+	}
+}
+
+//이미 부여된 Ability라면 해당 Spec을 반환 
+FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& Tag)
+{
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
+		{
+			if (AbilityTag.MatchesTag(Tag))
+			{
+				return &AbilitySpec;
+			}
+		}
+	}
+	return nullptr;
+}
 // GameplayAbilitySpec을 통해 Input Tag를 가져옴
 FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& Spec)
 {
@@ -100,7 +139,18 @@ FGameplayTag UAuraAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayA
 	}
 	return FGameplayTag();
 }
-
+// Spec으로 부터 StatusTag를 반환
+FGameplayTag UAuraAbilitySystemComponent::GetStatusTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag StatusTag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities.Status"))))
+		{
+			return StatusTag;
+		}
+	}
+	return FGameplayTag();
+}
 void UAuraAbilitySystemComponent::PlayIfHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid())

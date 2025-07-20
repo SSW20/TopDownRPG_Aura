@@ -17,7 +17,7 @@
 
 class UAuraAbilitySystemComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer&);
-DECLARE_MULTICAST_DELEGATE_OneParam(FAbilitiesGiven, UAuraAbilitySystemComponent*)
+DECLARE_MULTICAST_DELEGATE(FAbilitiesGiven)
 DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
 
 
@@ -34,10 +34,14 @@ public:
 	void AddGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& GameplayAbilities);
 	void AddPassiveGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassiveGameplayAbilities);
 	void ForEachAbility(const FForEachAbility& ForEachDelegate);
+	void UpdateAbilityStatus(int32 Level);
 	
-	FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& Spec);
-	FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec);
-		
+	static FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& Spec);
+	static FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec);
+	static FGameplayTag GetStatusTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
+
+	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& Tag);
+	
 	void PlayIfHeld(const FGameplayTag& InputTag);
 	void PlayIfReleased(const FGameplayTag& InputTag);
 
@@ -52,3 +56,5 @@ protected:
 private:
 
 };
+
+

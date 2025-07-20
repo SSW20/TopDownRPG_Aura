@@ -5,25 +5,34 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "UI/HUD/AuraHUD.h"
 #include "AuraAbilitySystemLibrary.generated.h"
 
+class USpellMenuWidgetController;
 /**
  * 
  */
 class UOverlayWidgetController;
 class UAttributeMenuWidgetController;
+class UAbilityInfo;
 UCLASS()
 class AURA_API UAuraAbilitySystemLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintPure, Category = "AbilitySystem|OverlayWidget")
+	UFUNCTION(BlueprintPure, Category = "AbilitySystem|OverlayWidget", meta = ( DefaultToSelf = "WorldContextObject"))
+	static bool GetWidgetControllerParams(const UObject* WorldContext, FWidgetControllerParams& OutWidgetControllerParams, AAuraHUD*& OutHUD);
+	
+	UFUNCTION(BlueprintPure, Category = "AbilitySystem|OverlayWidget", meta = ( DefaultToSelf = "WorldContextObject"))
 	static UOverlayWidgetController* GetOverlayWidgetController(const UObject* WorldContext);
 
-	UFUNCTION(BlueprintPure, Category = "AbilitySystem|AttributeMenu")
-	static UAttributeMenuWidgetController* GetAttributeMenuController(const UObject* WorldContext); 
-
+	UFUNCTION(BlueprintPure, Category = "AbilitySystem|AttributeMenu", meta = ( DefaultToSelf = "WorldContextObject"))
+	static UAttributeMenuWidgetController* GetAttributeMenuController(const UObject* WorldContext);
+	
+	UFUNCTION(BlueprintPure, Category = "AbilitySystem|SpellMenu", meta = ( DefaultToSelf = "WorldContextObject"))
+	static USpellMenuWidgetController* GetSpellMenuWidgetController(const UObject* WorldContext);
+	
 	UFUNCTION(BlueprintCallable , Category = "AbilitySystem|Character Default Attributes")
 	static void InitDefaultAttributes(const UObject* WorldContext, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 
@@ -39,7 +48,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static bool IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle);
 
-		// 기본적으로 언리얼엔진에서는 인자로 CONST가 아니면 OUT파라미터로 인식 --> 이를 막기 위해 UPARAM(ref) 사용
+	// 기본적으로 언리얼엔진에서는 인자로 CONST가 아니면 OUT파라미터로 인식 --> 이를 막기 위해 UPARAM(ref) 사용
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static void SetIsBlockedHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInIsBlockedHit);
 
@@ -53,4 +62,8 @@ public:
 	static bool IsFriend(AActor* FirstActor, AActor* SecondActor);
 
 	static int32 GetExpRewardByClassAndLevel(const UObject* WorldContext, ECharacterClass CharacterClass, float Level);
+
+	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayMechanics")
+	static UAbilityInfo* GetAbilityInfo(const UObject* WorldContext);
+
 };

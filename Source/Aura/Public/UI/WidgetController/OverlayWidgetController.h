@@ -34,7 +34,7 @@ struct FAuraAbilityInfo;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChanged, int32, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUIWidgetSignature, FUIWidgetRow, Row);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FAuraAbilityInfo&, Info);
+
 
 //블루프린트에서 사용 가능
 UCLASS(Blueprintable, BlueprintType)
@@ -59,8 +59,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Message")
 	FUIWidgetSignature UIWidget;
 
-	UPROPERTY(BlueprintAssignable, Category="GAS|Messages")
-	FAbilityInfoSignature AbilityInfoDelegate;
 	
 	UPROPERTY(BlueprintAssignable, Category="Exp")
 	FOnAttributeChangedSignature ExpChangeDelegate;
@@ -74,11 +72,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UDataTable> MessageDataTable;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
-	TObjectPtr<class UAbilityInfo> AbilityInfo;
-	
-	void BindStartupAbilities(UAuraAbilitySystemComponent* ASC);
 
 	void OnExpChange(int32 Exp);
 	void OnLevelChange(int32 Level);

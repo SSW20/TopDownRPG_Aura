@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/GameplayAbility.h"
 #include "Engine/DataAsset.h"
 #include "AbilityInfo.generated.h"
 
@@ -24,6 +25,10 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag InputTag = FGameplayTag();
 
+	//어빌리티에 할당된 상태 태그 
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag StatusTag = FGameplayTag();
+
 	// 쿨다운 태그
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag CooldownTag = FGameplayTag();
@@ -38,7 +43,14 @@ public:
 	//UMaterial의 인터페이스 UMaterial이거나 상속받는 객체를 사용
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<const class UMaterialInterface> BackgroundMaterial = nullptr;
-	
+
+	// 어빌리티를 활성화 시키기 위한 레벨 제한
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int32 LevelRequired = 0;
+
+	// 실제 Ability
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayAbility> Ability = nullptr;
 	
 };
 
