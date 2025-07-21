@@ -29,6 +29,10 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag StatusTag = FGameplayTag();
 
+	//어빌리티에 할당된 Active or Passive 태그
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	FGameplayTag AbilityType = FGameplayTag();
+
 	// 쿨다운 태그
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag CooldownTag = FGameplayTag();

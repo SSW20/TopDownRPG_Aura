@@ -28,10 +28,13 @@ protected:
 		const FGameplayEventData* TriggerEventData);
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
 	void SpawnProjectileInBluePrint(const FVector& TargetLocation, const bool bIsPitched, const float Pitch);
-
+	
 
 	
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	TSubclassOf<AAuraProjectile> ProjectileClass;
+	
+	UPROPERTY(EditDefaultsOnly)
+	int32 NumProjectiles = 5;
 };

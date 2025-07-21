@@ -221,6 +221,7 @@ UAbilityInfo* UAuraAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldCont
 {
 	AAuraGameModeBase* AuraGamemode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(WorldContext));
 	check(AuraGamemode);
-
 	return AuraGamemode->AbilityInfo;
 }
+
+

@@ -1,14 +1,22 @@
 // Copyright Druid Mechanics
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "UI/WidgetController/AuraWidgetController.h"
+#include "GameplayTagContainer.h"
 #include "SpellMenuWidgetController.generated.h"
-
 /**
  * 
  */
+struct FSelectedAbility
+{
+	FGameplayTag Ability = FGameplayTag();
+	FGameplayTag Status = FGameplayTag();
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FSpellGlobeSelectedSignature, bool, bSpendPointsButtonEnabled, bool, bEquipButtonEnabled, FString, DescriptionString, FString, NextLevelDescriptionString);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityTypeSignature, FGameplayTag, AbiltyTypeTag);
+
 UCLASS()
 class AURA_API USpellMenuWidgetController : public UAuraWidgetController
 {
@@ -16,4 +24,36 @@ class AURA_API USpellMenuWidgetController : public UAuraWidgetController
 public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
+
+	
+	UPROPERTY(BlueprintAssignable, Category = "GAS|PlayerState")
+	FOnPlayerPointChanged PlayerSkillPointChangedDelegate;
+	
+	UPROPERTY(BlueprintAssignable)
+	FSpellGlobeSelectedSignature SpellGlobeSelectedDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FAbilityTypeSignature WaitEquipSelectDelegate;
+	
+	UPROPERTY(BlueprintAssignable)
+	FAbilityTypeSignature StopWaitEquipSelectDelegate;
+
+	UFUNCTION(BlueprintCallable)
+	void SpellGlobeSelected(const FGameplayTag& AbilityTag);
+
+	UFUNCTION(BlueprintCallable)
+	void PressedSpellPointButton();
+
+	UFUNCTION(BlueprintCallable)
+	void DeselectGlobe();
+
+	UFUNCTION(BlueprintCallable)
+	void EquipButtonPressed();
+private:
+	void ShouldEnableButtons(const FGameplayTag& Statustag, int32 SpellPoints, bool& bOutSpellPointsButton, bool& bOutEquipButton);
+
+	FSelectedAbility SelectedAbility = FSelectedAbility();
+	int32 CurrentSpellPoints = 0;
+
+	bool bWaitingForEquip = false;
 };

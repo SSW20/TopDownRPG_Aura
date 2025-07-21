@@ -16,7 +16,6 @@ void UAttributeMenuWidgetController::BroadcastInitialValues()
 		BroadcastAttributeInfo(Pair.Key, Pair.Value());
 	}
 	PlayerAttributePointChangedDelegate.Broadcast(GetAuraPlayerState()->GetAttributePoint());
-	PlayerSkillPointChangedDelegate.Broadcast(GetAuraPlayerState()->GetSkillPoint());
 }
 
 //값이 바뀔 때 마다 어떻게 값을 넘겨주는가를 초기에 설정 / AuraHUD에서 사용
@@ -39,13 +38,6 @@ void UAttributeMenuWidgetController::BindCallbacksToDependencies()
 	{
 		PlayerAttributePointChangedDelegate.Broadcast(AttributePoint);
 	});
-
-	GetAuraPlayerState()->SkillPointChangeDelegate.AddLambda([this](int32 SkillPoint)
-	{
-		PlayerSkillPointChangedDelegate.Broadcast(SkillPoint);
-	});
-
-	
 }
 
 void UAttributeMenuWidgetController::UpgradeAttributes(const FGameplayTag& Tag)

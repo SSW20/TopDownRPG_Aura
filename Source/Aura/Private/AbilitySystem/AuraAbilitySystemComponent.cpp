@@ -18,6 +18,43 @@ void UAuraAbilitySystemComponent::AbilityActorInfoSet()
 
 }
 
+// Spell Point를 눌렀을 때 일어나는 로직
+void UAuraAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGameplayTag& AbilityTag)
+{
+	// Skill Point를 사용
+	// 이는 다시 SpellMenuWidget의 SkillPointChangeDelegate을 부른다
+	if (GetAvatarActor()->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddSkillPoint(GetAvatarActor(),-1);
+	}
+
+	// Selected Globe의 Ability Tag를 통해 Spec을 가져옴
+	// 이후 Spec을 통해 Status Tag를 가져옴
+	//		1. Unlocked 이거나 Equipped일시 Level UP
+	//		2. Eligible일시 Unlocked으로 변경
+	if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		FAuraGameplayTags Tags = FAuraGameplayTags::Get();
+		FGameplayTag StatusTag = GetStatusTagFromSpec(*AbilitySpec);
+
+		if (StatusTag.MatchesTagExact(Tags.Abilities_Status_Eligible))
+		{
+			AbilitySpec->DynamicAbilityTags.RemoveTag(Tags.Abilities_Status_Eligible);
+			AbilitySpec->DynamicAbilityTags.AddTag(Tags.Abilities_Status_Unlocked);
+		}
+		else if (StatusTag.MatchesTagExact(Tags.Abilities_Status_Unlocked) || StatusTag.MatchesTag(Tags.Abilities_Status_Equipped))
+		{
+			AbilitySpec->Level += 1;
+		}
+
+		// 이후 Ability의 Status가 변경되었으니 이 함수를 호출
+		// 이는 다시 SpellMenuWidgetController의 AbilityStatusTagsDelegate를 호출
+		ClientUpdateStatus_Implementation(AbilityTag,Tags.Abilities_Status_Unlocked, AbilitySpec->Level);
+	}
+
+	
+}
+
 void UAuraAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle)
 {
 	FGameplayTagContainer TagContainer;
@@ -33,6 +70,37 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 	{
 		AbilitiesGivenDelegate.Broadcast();
 	}
+}
+
+bool UAuraAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription,
+	FString& OutNextLevelDescription)
+{
+	if (const FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		if(UAuraGameplayAbility* AuraAbility = Cast<UAuraGameplayAbility>(AbilitySpec->Ability))
+		{
+			OutDescription = AuraAbility->GetDescription(AbilitySpec->Level);
+			OutNextLevelDescription = AuraAbility->GetNextLevelDescription(AbilitySpec->Level + 1);
+			return true;
+		}
+	}
+	const UAbilityInfo* AbilityInfo = UAuraAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+	if (AbilityTag.IsValid())
+	{
+		OutDescription = UAuraGameplayAbility::GetLockedDescription(AbilityInfo->FindAbilityInfoByTag(AbilityTag).LevelRequired);
+
+	}
+	else
+	{
+		OutNextLevelDescription = FString();
+	}
+	return false;
+}
+
+void UAuraAbilitySystemComponent::ClientUpdateStatus_Implementation(const FGameplayTag& AbilityTag,
+                                                                    const FGameplayTag& StatusTag, int32 Level)
+{
+	AbilityStatusTagsDelegate.Broadcast(AbilityTag, StatusTag, Level);
 }
 
 void UAuraAbilitySystemComponent::AddGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& GameplayAbilities)
@@ -95,6 +163,9 @@ void UAuraAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 			GiveAbility(AbilitySpec);
 			// Ability Spec 강제 복제
 			MarkAbilitySpecDirty(AbilitySpec);
+
+			// UpdateAbilityStatus가 서버에서 실행되니 클라에서도 실행되게 만듦
+			ClientUpdateStatus_Implementation(Info.AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Eligible, AbilitySpec.Level);
 		}
 	}
 }

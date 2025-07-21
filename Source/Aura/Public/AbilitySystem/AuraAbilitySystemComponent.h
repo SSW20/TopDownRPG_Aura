@@ -19,6 +19,7 @@ class UAuraAbilitySystemComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer&);
 DECLARE_MULTICAST_DELEGATE(FAbilitiesGiven)
 DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FAblityStatusTags, const FGameplayTag&  /*Ability Tag*/, const FGameplayTag& /*Status Tag*/, int32 /*Level*/);
 
 
 UCLASS()
@@ -28,6 +29,7 @@ class AURA_API UAuraAbilitySystemComponent : public UAbilitySystemComponent
 public:
 	FEffectAssetTags EffectAssetTags;
 	FAbilitiesGiven AbilitiesGivenDelegate;
+	FAblityStatusTags AbilityStatusTagsDelegate;
 	bool bIsStartUpAbilitiesBroadCasted = false;
 	
 	void AbilityActorInfoSet();
@@ -49,12 +51,20 @@ public:
 
 	UFUNCTION(Server,Reliable)
 	void ServerUpgradeAttribute(const FGameplayTag& Tag);
+
+	UFUNCTION(Server,Reliable)
+	void ServerSpendSpellPoint(const FGameplayTag& AbilityTag);
+
+	bool GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription);
 protected:
 	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle);
 
 	virtual void OnRep_ActivateAbilities() override;
-private:
+	
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateStatus(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 Level);
 
+	
 };
 
 

@@ -41,6 +41,7 @@ struct FWidgetControllerParams
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSignature, const FAuraAbilityInfo&, Info);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerPointChanged, int32, NewValue);
 
 UCLASS(Blueprintable, BlueprintType)
 class AURA_API UAuraWidgetController : public UObject
@@ -66,6 +67,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category="GAS|Messages")
 	FAbilityInfoSignature AbilityInfoDelegate;
+
+	
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
 	TObjectPtr<class UAbilityInfo> AbilityInfo;

@@ -14,7 +14,7 @@
 struct FAuraAttributeInfo;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAuraAttributeInfoSignature, const FAuraAttributeInfo&, Info);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerPointChanged, int32, NewValue);
+
 
 UCLASS()
 class AURA_API UAttributeMenuWidgetController : public UAuraWidgetController
@@ -27,8 +27,6 @@ public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 	
-	UPROPERTY(BlueprintAssignable, Category = "GAS|PlayerState")
-	FOnPlayerPointChanged PlayerSkillPointChangedDelegate;
 	UPROPERTY(BlueprintAssignable, Category = "GAS|PlayerState")
 	FOnPlayerPointChanged PlayerAttributePointChangedDelegate;
 

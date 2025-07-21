@@ -71,7 +71,7 @@ void AAuraPlayerState::AddAttributePoint(int32 NewAttributePoint)
 
 void AAuraPlayerState::AddSkillPoint(int32 NewSkillPoint)
 {
-	SkillPoint += SkillPoint;
+	SkillPoint += NewSkillPoint;
 	SkillPointChangeDelegate.Broadcast(SkillPoint);
 }
 

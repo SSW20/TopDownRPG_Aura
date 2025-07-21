@@ -15,6 +15,9 @@ class USpellMenuWidgetController;
 class UOverlayWidgetController;
 class UAttributeMenuWidgetController;
 class UAbilityInfo;
+
+
+
 UCLASS()
 class AURA_API UAuraAbilitySystemLibrary : public UBlueprintFunctionLibrary
 {
@@ -65,5 +68,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayMechanics")
 	static UAbilityInfo* GetAbilityInfo(const UObject* WorldContext);
-
 };
