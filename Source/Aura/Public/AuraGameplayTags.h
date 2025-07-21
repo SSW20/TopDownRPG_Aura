@@ -64,6 +64,8 @@ public:
 	FGameplayTag Effect_HitReact;
 
 	// Abilities
+	FGameplayTag Abilities_None;
+	
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	FGameplayTag Abilities_Fire_FireBolt;
@@ -80,6 +82,7 @@ public:
 	FGameplayTag Abilities_Type_Passive;
 	FGameplayTag Abilities_Type_None;
 
+	
 	// Meta Attributes
 	FGameplayTag Attributes_Meta_IncomingExp;
 	

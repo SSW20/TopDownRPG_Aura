@@ -20,7 +20,8 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContaine
 DECLARE_MULTICAST_DELEGATE(FAbilitiesGiven)
 DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FAblityStatusTags, const FGameplayTag&  /*Ability Tag*/, const FGameplayTag& /*Status Tag*/, int32 /*Level*/);
-
+DECLARE_MULTICAST_DELEGATE_FourParams(FAblityInfoTags, const FGameplayTag&  /*Ability Tag*/,
+	const FGameplayTag& /*Status Tag*/, const FGameplayTag&  /*Input Slot Tag*/, const FGameplayTag& /*Prev Input Slot Tag*/);
 
 UCLASS()
 class AURA_API UAuraAbilitySystemComponent : public UAbilitySystemComponent
@@ -30,6 +31,7 @@ public:
 	FEffectAssetTags EffectAssetTags;
 	FAbilitiesGiven AbilitiesGivenDelegate;
 	FAblityStatusTags AbilityStatusTagsDelegate;
+	FAblityInfoTags AbilityInfoTagsDelegate;
 	bool bIsStartUpAbilitiesBroadCasted = false;
 	
 	void AbilityActorInfoSet();
@@ -41,8 +43,15 @@ public:
 	static FGameplayTag GetInputTagFromSpec(const FGameplayAbilitySpec& Spec);
 	static FGameplayTag GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec);
 	static FGameplayTag GetStatusTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
+	FGameplayTag GetStatusTagFromAbilityTag(const FGameplayTag& AbilityTag);
+	FGameplayTag GetInputFromAbilityTag(const FGameplayTag& AbilityTag);
 
 	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& Tag);
+	FGameplayAbilitySpec* GetSpecFromInputTag(const FGameplayTag& InputTag);
+
+	void ClearAbilitiesFromInputTag(const FGameplayTag& InputTag);
+	void ClearInputTagBySpec(FGameplayAbilitySpec* AbilitySpec);
+	bool HasInputTag(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& InputTag);
 	
 	void PlayIfHeld(const FGameplayTag& InputTag);
 	void PlayIfReleased(const FGameplayTag& InputTag);
@@ -55,7 +64,11 @@ public:
 	UFUNCTION(Server,Reliable)
 	void ServerSpendSpellPoint(const FGameplayTag& AbilityTag);
 
+	UFUNCTION(Server,Reliable)
+	void ServerEquipAbility(const FGameplayTag& SlotInputTag, const FGameplayTag& AbilityTag);
+
 	bool GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription);
+	void ClientEquipAbility(const FGameplayTag&  AbilityTag, const FGameplayTag& StatusTag, const FGameplayTag&  InputSlotTag, const FGameplayTag& PrevInputSlotTag);
 protected:
 	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle);
 

@@ -72,8 +72,38 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 	}
 }
 
+void UAuraAbilitySystemComponent::ServerEquipAbility_Implementation(const FGameplayTag& SlotInputTag, const FGameplayTag& AbilityTag)
+{
+	if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		const FGameplayTag& PrevSlotTag = GetInputTagFromSpec(*AbilitySpec);
+		
+		// slot Input Tag를 가지고 있는 모든 액티브 어빌리티 청소 
+		ClearAbilitiesFromInputTag(SlotInputTag);
+
+		// 이제 AbilityTag로 Spec을 가져와
+		// Spec에 Inputtag지우고, Status바꿔
+		// 새로운 InputTag넣어주고 끝
+		ClearInputTagBySpec(AbilitySpec);
+		AbilitySpec->DynamicAbilityTags.AddTag(SlotInputTag);
+		
+		if (GetStatusTagFromSpec(*AbilitySpec).MatchesTagExact(FAuraGameplayTags::Get().Abilities_Status_Unlocked))
+		{
+			AbilitySpec->DynamicAbilityTags.RemoveTag(FAuraGameplayTags::Get().Abilities_Status_Unlocked);
+			AbilitySpec->DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
+		}
+	
+		MarkAbilitySpecDirty(*AbilitySpec);
+		
+		ClientEquipAbility(AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Equipped,SlotInputTag, PrevSlotTag);
+	}
+	
+	// Spec도 없다 ㅈ됨
+}
+
+// AbilityTag로 Ability를 찾아 Description 수정
 bool UAuraAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription,
-	FString& OutNextLevelDescription)
+                                                              FString& OutNextLevelDescription)
 {
 	if (const FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
 	{
@@ -95,6 +125,12 @@ bool UAuraAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag
 		OutNextLevelDescription = FString();
 	}
 	return false;
+}
+
+void UAuraAbilitySystemComponent::ClientEquipAbility(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
+	const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag)
+{
+	AbilityInfoTagsDelegate.Broadcast(AbilityTag, StatusTag, InputSlotTag, PrevInputSlotTag);
 }
 
 void UAuraAbilitySystemComponent::ClientUpdateStatus_Implementation(const FGameplayTag& AbilityTag,
@@ -185,6 +221,60 @@ FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromAbilityTag(const F
 	}
 	return nullptr;
 }
+
+// InputTag로 식별
+FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromInputTag(const FGameplayTag& InputTag)
+{
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
+		{
+			if (AbilityTag.MatchesTag(InputTag))
+			{
+				return &AbilitySpec;
+			}
+		}
+	}
+	return nullptr;
+}
+
+// 활성화된 Ability들을 돌면서 특정 InputTag가 있으면 지움
+void UAuraAbilitySystemComponent::ClearAbilitiesFromInputTag(const FGameplayTag& InputTag)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (HasInputTag(AbilitySpec, InputTag))
+		{
+			ClearInputTagBySpec(&AbilitySpec);
+		}
+	}
+}
+
+// Spec을 가지고 Spec의 inputTag를 삭제
+void UAuraAbilitySystemComponent::ClearInputTagBySpec(FGameplayAbilitySpec* AbilitySpec)
+{
+	if (AbilitySpec)
+	{
+		const FGameplayTag InputTag = GetInputTagFromSpec(*AbilitySpec);
+		AbilitySpec->DynamicAbilityTags.RemoveTag(InputTag);
+		MarkAbilitySpecDirty(*AbilitySpec);
+	}
+}
+
+// 해당 Spec에 특정 inputTag가 있는지 확인
+bool UAuraAbilitySystemComponent::HasInputTag(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& InputTag)
+{
+	for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
+	{
+		if (AbilityTag.MatchesTag(InputTag))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 // GameplayAbilitySpec을 통해 Input Tag를 가져옴
 FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& Spec)
 {
@@ -222,6 +312,28 @@ FGameplayTag UAuraAbilitySystemComponent::GetStatusTagFromSpec(const FGameplayAb
 	}
 	return FGameplayTag();
 }
+
+// AbilityTag를 통해 Spec을 얻은 뒤 해당 Spec의 StatusTag를 반환
+FGameplayTag UAuraAbilitySystemComponent::GetStatusTagFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+	if (AbilitySpec)
+	{
+		return GetStatusTagFromSpec(*AbilitySpec);
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UAuraAbilitySystemComponent::GetInputFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+	if (AbilitySpec)
+	{
+		return GetInputTagFromSpec(*AbilitySpec);
+	}
+	return FGameplayTag();
+}
+
 void UAuraAbilitySystemComponent::PlayIfHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid())
