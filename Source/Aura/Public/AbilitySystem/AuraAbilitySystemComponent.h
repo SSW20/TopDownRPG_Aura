@@ -70,6 +70,8 @@ public:
 	bool GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription);
 	void ClientEquipAbility(const FGameplayTag&  AbilityTag, const FGameplayTag& StatusTag, const FGameplayTag&  InputSlotTag, const FGameplayTag& PrevInputSlotTag);
 protected:
+
+	UFUNCTION(Client, Reliable)
 	void EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle);
 
 	virtual void OnRep_ActivateAbilities() override;

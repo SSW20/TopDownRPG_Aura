@@ -40,7 +40,8 @@ void USpellMenuWidgetController::BindCallbacksToDependencies()
 		{
 			FAuraAbilityInfo Info = AbilityInfo->FindAbilityInfoByTag(AbilityTag);
 			Info.AbilityTag = AbilityTag;
-			Info.StatusTag = StatusTag;	
+			Info.StatusTag = StatusTag;
+			Info.InputTag = GetAuraAbilitySystemComponent()->GetInputFromAbilityTag(AbilityTag);
 			AbilityInfoDelegate.Broadcast(Info);
 		}
 	});
@@ -164,6 +165,9 @@ void USpellMenuWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTa
 
 	StopWaitEquipSelectDelegate.Broadcast(AbilityInfo->FindAbilityInfoByTag(AbilityTag).AbilityType);
 	bWaitingForEquip = false;
+
+	GlobeReAssignDelegate.Broadcast(AbilityTag);
+	DeselectGlobe();
 }
 
 void USpellMenuWidgetController::ShouldEnableButtons(const FGameplayTag& StatusTag, int32 SpellPoints, bool& bOutSpellPointsButton, bool& bOutEquipButton)

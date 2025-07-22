@@ -27,7 +27,7 @@ struct AuraDamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(LightningResistance);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ArcaneResistance);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalResistance);
-	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCapturesMap;
+	
 
 	AuraDamageStatics()
 	{
@@ -47,18 +47,7 @@ struct AuraDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, ArcaneResistance, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UAuraAttributeSet, PhysicalResistance, Target, false);
 
-		const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_Armor, ArmorDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_BlockChance, BlockChanceDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_ArmorPenetration, ArmorPenetrationDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitChance, CritHitChanceDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitResistance, CritHitResistDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitDamage, CritHitDamageDef);
-
-		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Arcane, ArcaneResistanceDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Fire, FireResistanceDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Lightning, LightningResistanceDef);
-		TagsToCapturesMap.Add(Tags.Attributes_Resistance_Physical, PhysicalResistanceDef);
+	
 	}
 };
 
@@ -74,6 +63,10 @@ class AURA_API UExecCalc_Damage : public UGameplayEffectExecutionCalculation
 	GENERATED_BODY()
 public:
 	UExecCalc_Damage();
+	void DetermineDebuff(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
+	                     FGameplayEffectSpec EffectSpec,
+	                     FAggregatorEvaluateParameters EvaluateParams,
+	                     TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& TagsToCapturesMap) const;
 
 	// 이 함수는 Execution Calculation의 핵심으로, Gameplay Effect가 적용될 때 서버에서 실행
 	// PostGameplayEffectExecute 함수보다 먼저(이전) 실행

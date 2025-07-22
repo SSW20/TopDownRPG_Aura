@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AuraAbilityTypes.h"
 #include "GameFramework/Actor.h"
 #include "Sound/SoundBase.h"
 #include "NiagaraSystem.h"
@@ -23,11 +24,12 @@ public:
 	TObjectPtr<class UProjectileMovementComponent> ProjectileMovement;
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
-	FGameplayEffectSpecHandle DamageEffectSpecHandle;
+	FDamageEffectParams DamageEffectParams;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void OnHit();
 	virtual void Destroyed() override;
 	
 private:

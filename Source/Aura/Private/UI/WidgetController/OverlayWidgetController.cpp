@@ -2,6 +2,7 @@
 
 #include "UI/WidgetController/OverlayWidgetController.h"
 
+#include "AuraGameplayTags.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "AbilitySystem/AuraAttributeSet.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
@@ -67,6 +68,24 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 			}
 		}
 	);
+
+	//Equip 버튼을 눌러서 장착했으니 overlay도 바꿔야겠제?
+	GetAuraAbilitySystemComponent()->AbilityInfoTagsDelegate.AddUObject(this, &UOverlayWidgetController::OnAbilityEquipped);
+}
+
+void UOverlayWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
+	const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag) const
+{
+	FAuraAbilityInfo PrevInfo;
+	PrevInfo.InputTag = PrevInputSlotTag;
+	PrevInfo.StatusTag = FAuraGameplayTags::Get().Abilities_Status_Unlocked;
+	PrevInfo.AbilityTag = FGameplayTag();
+	AbilityInfoDelegate.Broadcast(PrevInfo);
+
+	FAuraAbilityInfo Info = AbilityInfo->FindAbilityInfoByTag(AbilityTag);
+	Info.InputTag = InputSlotTag;
+	Info.StatusTag = StatusTag;
+	AbilityInfoDelegate.Broadcast(Info);
 }
 
 // Player State의 LevelInfo를 받아 현재 Exp Percent를 계산하여 UI에 BroadCast

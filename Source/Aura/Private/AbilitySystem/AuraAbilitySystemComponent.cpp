@@ -55,7 +55,7 @@ void UAuraAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGa
 	
 }
 
-void UAuraAbilitySystemComponent::EffectApplied(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle)
+void UAuraAbilitySystemComponent::EffectApplied_Implementation(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle)
 {
 	FGameplayTagContainer TagContainer;
 	EffectSpec.GetAllAssetTags(TagContainer);
@@ -98,7 +98,7 @@ void UAuraAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 		ClientEquipAbility(AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Equipped,SlotInputTag, PrevSlotTag);
 	}
 	
-	// Spec도 없다 ㅈ됨
+	// Spec도 없다 --> 그냥 무시하죠?
 }
 
 // AbilityTag로 Ability를 찾아 Description 수정
@@ -265,7 +265,7 @@ void UAuraAbilitySystemComponent::ClearInputTagBySpec(FGameplayAbilitySpec* Abil
 // 해당 Spec에 특정 inputTag가 있는지 확인
 bool UAuraAbilitySystemComponent::HasInputTag(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& InputTag)
 {
-	for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
+	for (const FGameplayTag& AbilityTag : AbilitySpec.DynamicAbilityTags)
 	{
 		if (AbilityTag.MatchesTag(InputTag))
 		{

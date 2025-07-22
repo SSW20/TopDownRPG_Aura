@@ -62,24 +62,18 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
 
 	//	FGameplayEffectContext의 정보들을 최대한 채우는 과정 (Ability / SourceObject / Actors / HitResult ...)
-	ContextHandle.SetAbility(this);
-	ContextHandle.AddSourceObject(Projectile);
-	TArray<TWeakObjectPtr<AActor>> Actors;
-	Actors.Add(Projectile);
-	ContextHandle.AddActors(Actors);
-	FHitResult HitResult;
-	HitResult.Location = TargetLocation;
-	ContextHandle.AddHitResult(HitResult);
-
-
-	// Gameplay Tag : Key / Magnitude : Value
+	// ContextHandle.SetAbility(this);
+	// ContextHandle.AddSourceObject(Projectile);
+	// TArray<TWeakObjectPtr<AActor>> Actors;
+	// Actors.Add(Projectile);
+	// ContextHandle.AddActors(Actors);
+	// FHitResult HitResult;
+	// HitResult.Location = TargetLocation;
+	// ContextHandle.AddHitResult(HitResult);
+	
 	FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
-	for (auto& DamageType : DamageTypes)
-	{
-		SpecHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(
-			SpecHandle, DamageType.Key, DamageType.Value.GetValueAtLevel(GetAbilityLevel()));
-	}
+	float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
 
-	Projectile->DamageEffectSpecHandle = SpecHandle;
+	Projectile->DamageEffectParams = MakeDaamgeEffectParamsFromClassDefaults();
 	Projectile->FinishSpawning(SpawnTransform);
 }

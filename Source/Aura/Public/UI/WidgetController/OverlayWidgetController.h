@@ -66,6 +66,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="Stat")
 	FOnPlayerStatChanged LevelChangeDelegate;
 
+	void OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
+    	const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag) const;
 protected:
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);

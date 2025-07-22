@@ -207,87 +207,108 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	// 메타데이터 : IncomingExp, IncomingDamage ==> 이들은 복제 되지 않고 값을 받은 후 바로 0으로 세팅
 	if(Data.EvaluatedData.Attribute == GetIncomingExpAttribute())
 	{
-		float LocalIncomingExp = GetIncomingExp();
-		SetIncomingExp(0);
-		
-		if (Props.SourceCharacter->Implements<UPlayerInterface>())
-		{
-			IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
-
-			//	Level Up 계산 
-			int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
-			int32 CurrentExp = IPlayerInterface::Execute_GetExp(Props.SourceCharacter);
-
-			int32 NewLevel = IPlayerInterface::Execute_GetLevelByExp(Props.SourceCharacter, CurrentExp + LocalIncomingExp);
-			// Level Up
-			if (NewLevel > CurrentLevel)
-			{
-				int32 AttributePoint = IPlayerInterface::Execute_GetAttributePointReward(Props.SourceCharacter, NewLevel);
-				int32 SkillPoint = IPlayerInterface::Execute_GetSkillPointReward(Props.SourceCharacter, NewLevel);
-
-				// Add Attribute Point, Skill Point, Level
-				IPlayerInterface::Execute_AddAttributePoint(Props.SourceCharacter, AttributePoint);
-				IPlayerInterface::Execute_AddSkillPoint(Props.SourceCharacter, SkillPoint);
-				IPlayerInterface::Execute_AddLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
-				
-				// Update Mana, Health To Max
-				bIsMaxHealth = true;
-				bIsMaxMana = true;
-				
-				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
-			}
-			
-		}
+		HandleIncomingExp(Props);
 	}
-	
 	
 	if(Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		const float IncomeDamage = GetIncomingDamage();
-		SetIncomingDamage(0.f);
-		
-		float NewHealth = GetHealth() - IncomeDamage;
-		bool bIsDead = false;
-
-		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-
-		if (NewHealth <= 0)
-			bIsDead = true;
-		
-		if (!bIsDead)
-		{
-			FGameplayTagContainer TagContainer;
-			TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
-			
-			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActor())->TryActivateAbilitiesByTag(TagContainer);
-		}
-		else
-		{
-			if (ICombatInterface* Target = Cast<ICombatInterface>(Props.TargetAvatarActor))
-			{
-				Target->Die();
-			}
-			SendExp(Props);
-			
-		}
-
-		if (Props.TargetCharacter != Props.SourceCharacter)
-		{
-			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceController))
-			{
-				const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
-				const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
-			}
-			if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.TargetController))
-			{
-				const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
-				const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
-			}
-		}
+		HandleIncomingDamage(Props);
 	}
 }
+void UAuraAttributeSet::HandleIncomingExp(FEffectProperties& Props)
+{
+	float LocalIncomingExp = GetIncomingExp();
+	SetIncomingExp(0);
+		
+	if (Props.SourceCharacter->Implements<UPlayerInterface>())
+	{
+		IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
+
+		//	Level Up 계산 
+		int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+		int32 CurrentExp = IPlayerInterface::Execute_GetExp(Props.SourceCharacter);
+
+		int32 NewLevel = IPlayerInterface::Execute_GetLevelByExp(Props.SourceCharacter, CurrentExp + LocalIncomingExp);
+		// Level Up
+		if (NewLevel > CurrentLevel)
+		{
+			int32 AttributePoint = IPlayerInterface::Execute_GetAttributePointReward(Props.SourceCharacter, NewLevel);
+			int32 SkillPoint = IPlayerInterface::Execute_GetSkillPointReward(Props.SourceCharacter, NewLevel);
+
+			// Add Attribute Point, Skill Point, Level
+			IPlayerInterface::Execute_AddAttributePoint(Props.SourceCharacter, AttributePoint);
+			IPlayerInterface::Execute_AddSkillPoint(Props.SourceCharacter, SkillPoint);
+			IPlayerInterface::Execute_AddLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
+				
+			// Update Mana, Health To Max
+			bIsMaxHealth = true;
+			bIsMaxMana = true;
+				
+			IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
+		}
+			
+	}
+}
+
+void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
+{
+	const float IncomeDamage = GetIncomingDamage();
+	SetIncomingDamage(0.f);
+		
+	float NewHealth = GetHealth() - IncomeDamage;
+	bool bIsDead = false;
+
+	SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+
+	if (NewHealth <= 0)
+		bIsDead = true;
+		
+	if (!bIsDead)
+	{
+		FGameplayTagContainer TagContainer;
+		TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
+			
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActor())->TryActivateAbilitiesByTag(TagContainer);
+	}
+	else
+	{
+		if (ICombatInterface* Target = Cast<ICombatInterface>(Props.TargetAvatarActor))
+		{
+			Target->Die();
+		}
+		SendExp(Props);
+			
+	}
+
+	if (Props.TargetCharacter != Props.SourceCharacter)
+	{
+		if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceController))
+		{
+			const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+			const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+			PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+		}
+		if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.TargetController))
+		{
+			const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+			const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+			PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+		}
+
+		if (UAuraAbilitySystemLibrary::IsDebuffSuccess(Props.EffectContextHandle))
+		{
+			// 무엇을 할거냐?
+			HandleDebuff(Props);
+		}
+	}
+
+	
+}
+
+void UAuraAttributeSet::HandleDebuff(FEffectProperties& Props)
+{
+}
+
 
 void UAuraAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
@@ -362,4 +383,5 @@ void UAuraAttributeSet::SendExp(FEffectProperties& Props)
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Props.SourceCharacter, Tags.Attributes_Meta_IncomingExp, Payload);
 	}
 }
+
 

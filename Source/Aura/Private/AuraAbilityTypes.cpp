@@ -43,12 +43,32 @@ bool FAuraGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 		{
 			RepBits |= 1 << 8;
 		}
+		if (bIsDebuffSuccess)
+		{
+			RepBits |= 1 << 9;
+		}
+		if (DebuffDamage > 0.f)
+		{
+			RepBits |= 1 << 10;
+		}
+		if (DebuffFrequency > 0.f)
+		{
+			RepBits |= 1 << 11;
+		}
+		if (DebuffDuration > 0.f)
+		{
+			RepBits |= 1 << 12;
+		}
+		if (DamageTypeTag.IsValid())
+		{
+			RepBits |= 1 << 13;
+		}
 	}
 
 
 	//	RepBits를 네트워크로 전송.
 	//  받는 쪽(Loading 모드)에서 이 지도를 먼저 읽어 어떤 데이터가 뒤따라올지 알 수 있음.
-	Ar.SerializeBits(&RepBits, 9);
+	Ar.SerializeBits(&RepBits, 14);
 
 	
 	// 역 직렬화란 ?
@@ -104,6 +124,34 @@ bool FAuraGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 	{
 		Ar << bIsBlocked;
 	}
+	if (RepBits & (1 << 9))
+	{
+		Ar << bIsDebuffSuccess;
+	}
+	if (RepBits & (1 << 10))
+	{
+		Ar << DebuffDamage;
+	}
+	if (RepBits & (1 << 11))
+	{
+		Ar << DebuffFrequency;
+	}
+	if (RepBits & (1 << 12))
+	{
+		Ar << DebuffDuration;
+	}
+	if (RepBits & (1 << 13))
+	{
+		if (Ar.IsLoading())
+		{
+			if (!DamageTypeTag.IsValid())
+			{
+				DamageTypeTag = TSharedPtr<FGameplayTag>(new FGameplayTag());
+			}
+		}
+		DamageTypeTag->NetSerialize(Ar, Map, bOutSuccess);
+	}
+
 
 
 	//'불러오기' 모드일 때만 실행

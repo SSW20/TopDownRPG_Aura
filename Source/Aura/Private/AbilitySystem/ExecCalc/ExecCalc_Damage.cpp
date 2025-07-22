@@ -3,6 +3,7 @@
 
 #include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AuraGameplayTags.h"
 
@@ -23,9 +24,55 @@ UExecCalc_Damage::UExecCalc_Damage()
 	
 }
 
+// UAuraAbilitySystemLibrary::ApplyDamageEffect 호출 이후 Effect가 적용 된 후 호출
+// 디버프 성공 여부 계산 및 결과 기록
+// 결과를 FAuraGameplayEffectContext에 기록
+void UExecCalc_Damage::DetermineDebuff(const FGameplayEffectCustomExecutionParameters& ExecutionParams, const FGameplayEffectSpec EffectSpec,
+	FAggregatorEvaluateParameters EvaluateParams, TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& TagsToCapturesMap) const
+{
+	for (TTuple<FGameplayTag,FGameplayTag> Pair : FAuraGameplayTags::Get().DamageTypesToDebuff)
+	{
+		FGameplayTag DamageTypeTag = Pair.Key;
+		FGameplayTag DebuffTag = Pair.Value;
+
+		const float TypeDamage = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false, -1.f);
+		if (TypeDamage > -0.5f)
+		{
+			// Debuf Chance 돌리고 적용 판단
+			const float DebufChance = EffectSpec.GetSetByCallerMagnitude(FAuraGameplayTags::Get().Debuff_Chance, false, -1.f);
+
+			float TargetDebufResistance;
+			const FGameplayTag DebuffResistanceTag = FAuraGameplayTags::Get().DamageTypesToResistances[DamageTypeTag];
+			ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(TagsToCapturesMap[DebuffResistanceTag],
+			                                                           EvaluateParams, TargetDebufResistance);
+			
+			const float EffectiveDebuffChance = DebufChance * (100 - TargetDebufResistance);
+			const bool bDebuff = FMath::RandRange(0, 100) <= EffectiveDebuffChance;
+			if (bDebuff)
+			{
+				// 이제 디버프 걸렸음 뭐함?
+				// 값 정해졌으니 해줘야제
+
+				FGameplayEffectContextHandle EffectContext = EffectSpec.GetContext();
+				
+				UAuraAbilitySystemLibrary::SetIsDebuffSuccess(EffectContext, true);
+				UAuraAbilitySystemLibrary::SetDamageType(EffectContext,DamageTypeTag);
+
+				const float DebuffDamage = EffectSpec.GetSetByCallerMagnitude(FAuraGameplayTags::Get().Debuff_Damage, false, -1.f);
+				const float DebuffFrequency = EffectSpec.GetSetByCallerMagnitude(FAuraGameplayTags::Get().Debuff_Frequency, false, -1.f);
+				const float DebuffDuration = EffectSpec.GetSetByCallerMagnitude(FAuraGameplayTags::Get().Debuff_Duration, false, -1.f);
+
+				UAuraAbilitySystemLibrary::SetDebuffDamage(EffectContext,DebuffDamage);
+				UAuraAbilitySystemLibrary::SetDebuffFrequency(EffectContext,DebuffFrequency);
+				UAuraAbilitySystemLibrary::SetDebuffDuration(EffectContext,DebuffDuration);
+			}
+			
+		}
+	}
+}
 
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
-	FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
+                                              FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
 	// ExecutionParams: GE 실행에 필요한 모든 입력 정보 (소스, 타겟, GE 스펙 등)를 담고 있는 구조체.
 	// OutExecutionOutput: 계산된 최종 결과를 GAS 시스템에 전달하여 능력치를 실제로 변경하는 데 사용되는 출력 구조체
@@ -52,8 +99,29 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	EvaluateParams.TargetTags = TargetTags;
 
 	FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
+	
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCapturesMap;
+	const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_Armor, DamageStatics().ArmorDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_BlockChance, DamageStatics().BlockChanceDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_ArmorPenetration, DamageStatics().ArmorPenetrationDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitChance, DamageStatics().CritHitChanceDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitResistance, DamageStatics().CritHitResistDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Secondary_CritHitDamage, DamageStatics().CritHitDamageDef);
 
+	TagsToCapturesMap.Add(Tags.Attributes_Resistance_Arcane, DamageStatics().ArcaneResistanceDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Resistance_Fire, DamageStatics().FireResistanceDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Resistance_Lightning, DamageStatics().LightningResistanceDef);
+	TagsToCapturesMap.Add(Tags.Attributes_Resistance_Physical, DamageStatics().PhysicalResistanceDef);
 
+	
+	/*
+	 *		Debuff 계산 로직 부분
+	 */
+	
+	DetermineDebuff(ExecutionParams, EffectSpec, EvaluateParams, TagsToCapturesMap);
+	
+	
 	/*
 	 *		Damage 계산 로직 부분
 	 */
@@ -66,8 +134,8 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		const FGameplayTag DamageTypeTag = Pair.Key;
 		const FGameplayTag ResistanceTag = Pair.Value;
 
-		checkf(AuraDamageStatics().TagsToCapturesMap.Contains(ResistanceTag), TEXT("TagsToCaptureDefs doesn't contain Tag: [%s] in ExecCalc_Damage"), *ResistanceTag.ToString())
-		const FGameplayEffectAttributeCaptureDefinition ResistanceCaptureDef = AuraDamageStatics().TagsToCapturesMap[ResistanceTag];
+		checkf(TagsToCapturesMap.Contains(ResistanceTag), TEXT("TagsToCaptureDefs doesn't contain Tag: [%s] in ExecCalc_Damage"), *ResistanceTag.ToString())
+		const FGameplayEffectAttributeCaptureDefinition ResistanceCaptureDef = TagsToCapturesMap[ResistanceTag];
 		
 		float TargetResistance = 0.f;
 		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(ResistanceCaptureDef, EvaluateParams, TargetResistance);

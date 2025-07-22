@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AuraAbilityTypes.h"
 #include "AuraGameplayAbility.h"
 #include "GameplayEffect.h"
 #include "Interaction/CombatInterface.h"
@@ -18,16 +19,31 @@ class AURA_API UAuraDamageGameplayAbility : public UAuraGameplayAbility
 public:
 	UFUNCTION(BlueprintCallable)
 	void CauseDamage(AActor* TargetActor);
-	
+
+	FDamageEffectParams MakeDaamgeEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	TSubclassOf<class UGameplayEffect> DamageEffectClass; // 사용할 데미지 GE 클래스
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
-	TMap<FGameplayTag,FScalableFloat> DamageTypes;
+	FGameplayTag DamageTypeTag;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
+	FScalableFloat Damage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffChance = 20.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffDamage = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffFrequency = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffDuration = 5.f;
+	
 	UFUNCTION(BlueprintPure)
 	FTaggedMontage GetTaggedMontageInArray(const TArray<FTaggedMontage>& TaggedMontages);
 
-	float GetDamageByDamageType(float InLevel, const FGameplayTag& DamageType);
 };
