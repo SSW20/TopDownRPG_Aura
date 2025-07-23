@@ -231,7 +231,8 @@ FGameplayEffectContextHandle UAuraAbilitySystemLibrary::ApplyDamageEffect(const 
 	const AActor* SourceActor = Params.SourceAbilitySystemComponent->GetAvatarActor();
 	FGameplayEffectContextHandle ContextHandle = Params.SourceAbilitySystemComponent->MakeEffectContext();
 	ContextHandle.AddSourceObject(SourceActor);
-	
+	SetDeathImpulseVector(ContextHandle, Params.DeathImpulseVector);
+	SetKnockImpulseVector(ContextHandle,Params.KnockbackImpulseVector);
 	FGameplayEffectSpecHandle SpecHandle = Params.SourceAbilitySystemComponent->MakeOutgoingSpec(Params.DamageGameplayEffectClass, Params.Level,ContextHandle);
 
 	FAuraGameplayTags Tags = FAuraGameplayTags::Get();
@@ -251,7 +252,7 @@ FGameplayEffectContextHandle UAuraAbilitySystemLibrary::ApplyDamageEffect(const 
 bool UAuraAbilitySystemLibrary::IsDebuffSuccess(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FAuraGameplayEffectContext* AuraEffectContext = static_cast<const FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
-	{
+	{ 
 		return AuraEffectContext->GetIsDebuffSucceess();
 	}
 	return false;
@@ -295,8 +296,27 @@ FGameplayTag UAuraAbilitySystemLibrary::GetDamageType(const FGameplayEffectConte
 	}
 	return FGameplayTag();
 }
+
+FVector UAuraAbilitySystemLibrary::GetDeathImpulsVector(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FAuraGameplayEffectContext* AuraEffectContext = static_cast<const FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetDeathImpulseVector();
+	}
+	return FVector::ZeroVector;
+}
+
+FVector UAuraAbilitySystemLibrary::GetKnockbackImpulsVector(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FAuraGameplayEffectContext* AuraEffectContext = static_cast<const FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetKnockbackImpulseVector();
+	}
+	return FVector::ZeroVector;
+}
+
 void UAuraAbilitySystemLibrary::SetIsDebuffSuccess(FGameplayEffectContextHandle& EffectContextHandle,
-	bool bInSuccessfulDebuff)
+                                                   bool bInSuccessfulDebuff)
 {
 	if (FAuraGameplayEffectContext* AuraEffectContext = static_cast<FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
@@ -335,5 +355,22 @@ void UAuraAbilitySystemLibrary::SetDamageType(FGameplayEffectContextHandle& Effe
 	{
 		const TSharedPtr<FGameplayTag> DamageType = MakeShared<FGameplayTag>(InDamageType);
 		AuraEffectContext->SetDamageType(DamageType);
+	}
+}
+
+void UAuraAbilitySystemLibrary::SetDeathImpulseVector(FGameplayEffectContextHandle& EffectContextHandle, const FVector& InVector)
+{
+	if (FAuraGameplayEffectContext* AuraEffectContext = static_cast<FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetDeathImpulseVector(InVector);
+	}
+}
+
+void UAuraAbilitySystemLibrary::SetKnockImpulseVector(FGameplayEffectContextHandle& EffectContextHandle,
+	const FVector& InVector)
+{
+	if (FAuraGameplayEffectContext* AuraEffectContext = static_cast<FAuraGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetKnockbackImpulseVector(InVector);
 	}
 }

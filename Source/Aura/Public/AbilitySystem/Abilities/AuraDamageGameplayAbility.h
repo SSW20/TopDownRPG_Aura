@@ -20,7 +20,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CauseDamage(AActor* TargetActor);
 
-	FDamageEffectParams MakeDaamgeEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
+	UFUNCTION(BlueprintPure)
+	FDamageEffectParams MakeDamgeEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	TSubclassOf<class UGameplayEffect> DamageEffectClass; // 사용할 데미지 GE 클래스
@@ -42,6 +43,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float DebuffDuration = 5.f;
+
+	// 죽었을 때 날라가는 정도
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DeathImpulseMagnitude = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float KnockbackMagnitude = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float KnockbackChance = 20.f;
 	
 	UFUNCTION(BlueprintPure)
 	FTaggedMontage GetTaggedMontageInArray(const TArray<FTaggedMontage>& TaggedMontages);

@@ -11,6 +11,7 @@
 #include "Interaction/CombatInterface.h"
 #include "UI/Widget/FloatingDamageText.h"
 #include "Abilities/GameplayAbility.h"
+#include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 #include "AuraCharacterBase.generated.h"
 
 class UAbilitySystemComponent;
@@ -35,13 +36,15 @@ public:
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetActor_Implementation() override;
-	virtual void Die() override;
+	virtual void Die(const FVector& DeathImpuseVector) override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& Tag) override;
 	virtual int32 GetSummonCount_Implementation() override;
 	virtual void IncreaseSummonCount_Implementation(int32 AddValue) override;
 	virtual ECharacterClass GetCharacterClass_Implementation() override;
+	virtual FOnASCRegistered GetASCRegistered() override;
+	/* End Combat Interface */
 	
 protected:
 	// Called when the game starts or when spawned
@@ -106,7 +109,7 @@ protected:
 	UNiagaraSystem* BloodEffect;
 	
 	bool bDead = false;
-	/* End Combat Interface */
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,Category="Combat")
 	USoundBase* DeathSoundBase;
@@ -115,8 +118,16 @@ protected:
 	// NetMulticast : "네트워크를 통해 멀티캐스트 됨. 서버에서 호출되면 서버 자신과 연결된 모든 클라이언트 인스턴스에서 동시에 실행됨.
 	// Reliable : 이 네트워크 RPC 호출은 네트워크 상에서 발생하더라도 해당 함수 호출은 반드시 목적지에 도착하여 실행됨을 보장함.
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastHandleDeath();
+	virtual void MulticastHandleDeath(const FVector& DeathImpuseVector);
 
 	// Minions
 	int32 SummonCount = 0;
+
+	// ASC Delegate
+	FOnASCRegistered ASCRegisteredDelegate;
+
+
+	// Debuff Niagara Component
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UDebuffNiagaraComponent> BurnNiagaraComponent;
 };

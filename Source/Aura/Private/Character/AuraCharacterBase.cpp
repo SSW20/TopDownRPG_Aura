@@ -12,6 +12,10 @@ AAuraCharacterBase::AAuraCharacterBase()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	BurnNiagaraComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>(TEXT("BurnDebuffNiagaraComponent"));
+	BurnNiagaraComponent->SetupAttachment(GetRootComponent());
+	BurnNiagaraComponent->DebuffTag = FAuraGameplayTags::Get().Debuff_Burn;
+
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
 	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -21,9 +25,11 @@ AAuraCharacterBase::AAuraCharacterBase()
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
+
+	
 }
 
-UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const
+UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const 
 {
 	return AbilitySystemComponent;
 }
@@ -95,10 +101,10 @@ AActor* AAuraCharacterBase::GetActor_Implementation()
 	return this;
 }
 
-void AAuraCharacterBase::Die()
+void AAuraCharacterBase::Die(const FVector& DeathImpuseVector)
 {
 	Weapon->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-	MulticastHandleDeath();
+	MulticastHandleDeath(DeathImpuseVector);
 }
 
 TArray<FTaggedMontage> AAuraCharacterBase::GetTaggedMontages_Implementation()
@@ -138,22 +144,30 @@ ECharacterClass AAuraCharacterBase::GetCharacterClass_Implementation()
 	return CharacterClass;
 }
 
-void AAuraCharacterBase::MulticastHandleDeath_Implementation()
+FOnASCRegistered AAuraCharacterBase::GetASCRegistered()
+{
+	return ASCRegisteredDelegate;
+}
+
+void AAuraCharacterBase::MulticastHandleDeath_Implementation(const FVector& DeathImpuseVector)
 {
 	UGameplayStatics::PlaySoundAtLocation(this, DeathSoundBase,GetActorLocation(), GetActorRotation());
 	Weapon->SetSimulatePhysics(true);
 	Weapon->SetEnableGravity(true);
 	Weapon->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-
+	Weapon->AddImpulse(DeathImpuseVector * 0.1f,NAME_None, true);
+	
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetEnableGravity(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-
+	GetMesh()->AddImpulse(DeathImpuseVector,NAME_None, true);
+	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	Dissolve();
 
 	bDead = true;
+	BurnNiagaraComponent->Deactivate();
 }
 
 void AAuraCharacterBase::Dissolve()

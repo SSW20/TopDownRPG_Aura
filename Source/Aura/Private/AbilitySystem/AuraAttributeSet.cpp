@@ -7,7 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Character/AuraCharacterBase.h"
 #include "AuraGameplayTags.h"
-#include "Aura/AuraLogChannels.h"
+#include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/AuraPlayerController.h"
 
@@ -201,9 +201,12 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 {
 	Super::PostGameplayEffectExecute(Data);
 
+		
 	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
 
+	if (Props.TargetCharacter->Implements<UCombatInterface>() && ICombatInterface::Execute_IsDead(Props.TargetCharacter)) return;
+	
 	// 메타데이터 : IncomingExp, IncomingDamage ==> 이들은 복제 되지 않고 값을 받은 후 바로 0으로 세팅
 	if(Data.EvaluatedData.Attribute == GetIncomingExpAttribute())
 	{
@@ -217,6 +220,18 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 }
 void UAuraAttributeSet::HandleIncomingExp(FEffectProperties& Props)
 {
+	/*
+	*	UAuraAbilitySystemLibrary::ApplyDamageEffect에서 FDamageEffectParams을 받고 새로운 FGameplayEffectSpecHandle을 생성 후 대상 액터에게 적용
+
+		UExecCalc_Damage의 DetermineDebuff에서 이 파라미터와 대상의 저항을 바탕으로 디버프 성공 여부와 최종 수치를 계산하고 FAuraGameplayEffectContext에 기록
+
+		NetSerialize를 통해 이 기록된  결과가 네트워크로 동기화
+
+		마지막으로, PostGameplayEffectExecute 에서 HandleDebuff함수에서 활용하는 흐름
+
+		디버프를 적용시키지 않는 CauseDamage 라는 Blueprintcallable이라는 함수도 있지만 쓰지 않을 예정
+	 */
+	
 	float LocalIncomingExp = GetIncomingExp();
 	SetIncomingExp(0);
 		
@@ -269,12 +284,19 @@ void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 		TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
 			
 		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActor())->TryActivateAbilitiesByTag(TagContainer);
+
+		const FVector& KnockbackForce = UAuraAbilitySystemLibrary::GetKnockbackImpulsVector(Props.EffectContextHandle);
+		if (!KnockbackForce.IsNearlyZero(1.f))
+		{
+			Props.TargetCharacter->LaunchCharacter(KnockbackForce, true, true);
+		}
 	}
 	else
 	{
 		if (ICombatInterface* Target = Cast<ICombatInterface>(Props.TargetAvatarActor))
 		{
-			Target->Die();
+			// 죽었을 때 날라가게 만들기 DeathImpulseVector 추가
+			Target->Die(UAuraAbilitySystemLibrary::GetDeathImpulsVector(Props.EffectContextHandle));
 		}
 		SendExp(Props);
 			
@@ -307,6 +329,60 @@ void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 
 void UAuraAttributeSet::HandleDebuff(FEffectProperties& Props)
 {
+	/*
+ 		HandleDebuff함수에서는 Debuff가 성공했을 때만 호출 
+
+		이는 실제 디버프를 적용시킬 GameplayEffect를 만들어 Duration, Damage, Period,... 을 적용시킨 뒤 GE를 적용하는 역할을 함 
+
+		(이 GE는 다시 PostGameplayEffectExecute 부르지만 Debuff 성공은 설정하지 않아 무한루프에 빠지지않음)
+ 	*/
+	FGameplayEffectContextHandle EffectContexthandle = Props.SourceASC->MakeEffectContext();
+	EffectContexthandle.AddSourceObject(Props.SourceAvatarActor);
+
+	const FAuraGameplayTags& Tags = FAuraGameplayTags::Get();
+	const FGameplayTag DamageTypeTag =  UAuraAbilitySystemLibrary::GetDamageType(Props.EffectContextHandle);
+	const float DebuffDamage = UAuraAbilitySystemLibrary::GetDebuffDamage(Props.EffectContextHandle);
+	const float DebuffDuration = UAuraAbilitySystemLibrary::GetDebuffDuration(Props.EffectContextHandle);
+	const float DebuffFrequency = UAuraAbilitySystemLibrary::GetDebuffFrequency(Props.EffectContextHandle);
+	
+	
+	FString DebuffName = FString::Printf(TEXT("Debuff : %s"),*DamageTypeTag.ToString());
+	UGameplayEffect* Effect = NewObject<UGameplayEffect>(GetTransientPackage(),FName(DebuffName));
+
+	Effect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
+	Effect->Period = DebuffFrequency;
+	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
+	Effect->bExecutePeriodicEffectOnApplication = false;
+
+	// Effect->InheritableOwnedTagsContainer.AddTag(Tags.DamageTypesToDebuff[DamageTypeTag]); << 버전 업데이트 이후로 쓰지 않음
+
+	FInheritedTagContainer TagContainer = FInheritedTagContainer();
+	UTargetTagsGameplayEffectComponent& Component = Effect->FindOrAddComponent<UTargetTagsGameplayEffectComponent>();
+	TagContainer.Added.AddTag(Tags.DamageTypesToDebuff[DamageTypeTag]);
+	TagContainer.CombinedTags.AddTag(Tags.DamageTypesToDebuff[DamageTypeTag]);
+	Component.SetAndApplyTargetTagChanges(TagContainer);
+
+	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+	Effect->StackLimitCount = 1;
+
+	int32 Index = Effect->Modifiers.Num();
+	Effect->Modifiers.Add(FGameplayModifierInfo());
+	FGameplayModifierInfo& ModifierInfo = Effect->Modifiers[Index];
+	
+	ModifierInfo.ModifierMagnitude = FScalableFloat(DebuffDamage);
+	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
+	ModifierInfo.Attribute = GetIncomingDamageAttribute();
+	
+	FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(Effect, EffectContexthandle, 1.f);
+	if (MutableSpec)
+	{
+		FAuraGameplayEffectContext* AuraEffectContext = static_cast<FAuraGameplayEffectContext*>(MutableSpec->GetContext().Get());
+		TSharedPtr<FGameplayTag> DebuffDamageTypeTag = MakeShareable(new FGameplayTag(DamageTypeTag));
+		AuraEffectContext->SetDamageType(DebuffDamageTypeTag);
+
+		Props.TargetASC->ApplyGameplayEffectSpecToSelf(*MutableSpec);
+	}
+	
 }
 
 

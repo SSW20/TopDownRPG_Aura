@@ -150,6 +150,8 @@ void AAuraEnemy::InitAbilityActorInfo()
 	{
 		InitializeDefaultAttributes();
 	}
+	ASCRegisteredDelegate.Broadcast(AbilitySystemComponent);
+
 }
 
 
@@ -159,10 +161,9 @@ void AAuraEnemy::InitializeDefaultAttributes() const
 
 }
 
-void AAuraEnemy::Die()
+void AAuraEnemy::Die(const FVector& DeathImpulseVector)
 {
 	SetLifeSpan(LifeSpan);
 	if(AIController) AIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
-	Super::Die();
-
+	Super::Die(DeathImpulseVector);
 }

@@ -11,6 +11,9 @@
 
 // This class does not need to be modified.
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnASCRegistered, UAbilitySystemComponent*);
+
+
 UINTERFACE(MinimalAPI, BlueprintType)
 class UCombatInterface : public UInterface
 {
@@ -69,7 +72,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void IncreaseSummonCount(int32 AddValue);
 	
-	virtual void Die() = 0;
+	virtual void Die(const FVector& DeathImpuseVector) = 0;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	TArray<FTaggedMontage> GetTaggedMontages();
@@ -79,4 +82,7 @@ public:
 
 	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
 	ECharacterClass GetCharacterClass();
+
+	virtual FOnASCRegistered GetASCRegistered() = 0;
+	
 };

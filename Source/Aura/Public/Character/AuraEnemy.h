@@ -76,7 +76,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAuraAIController> AIController;
 
-	virtual void Die() override;
+	virtual void Die(const FVector& DeathImpulseVector) override;
 private:
 	
 };

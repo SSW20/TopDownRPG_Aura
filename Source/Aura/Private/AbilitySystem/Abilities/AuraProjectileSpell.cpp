@@ -55,9 +55,7 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 	);
 
 	//TODO : 맞았을 때 게임플레이 이펙트 
-	GetAvatarActorFromActorInfo();
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(
-		GetAvatarActorFromActorInfo());
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
 	FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
 	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
 
@@ -72,8 +70,7 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 	// ContextHandle.AddHitResult(HitResult);
 	
 	FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
-	float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
 
-	Projectile->DamageEffectParams = MakeDaamgeEffectParamsFromClassDefaults();
+	Projectile->DamageEffectParams = MakeDamgeEffectParamsFromClassDefaults();
 	Projectile->FinishSpawning(SpawnTransform);
 }
