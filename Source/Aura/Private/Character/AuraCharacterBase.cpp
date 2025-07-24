@@ -200,3 +200,7 @@ void AAuraCharacterBase::InitializeDefaultAttributes() const
 }
 
 
+USkeletalMeshComponent* AAuraCharacterBase::GetWeapon_Implementation()
+{
+	return Weapon;
+}

@@ -44,6 +44,7 @@ public:
 	virtual void IncreaseSummonCount_Implementation(int32 AddValue) override;
 	virtual ECharacterClass GetCharacterClass_Implementation() override;
 	virtual FOnASCRegistered GetASCRegistered() override;
+	virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
 	/* End Combat Interface */
 	
 protected:

@@ -13,5 +13,7 @@ UCLASS()
 class AURA_API UAuraMeleeAttack : public UAuraDamageGameplayAbility
 {
 	GENERATED_BODY()
-	
+public:
+	UFUNCTION(BlueprintCallable, Category = "Ability")
+	FDamageEffectParams DetermineKnockBack(AActor* TargetActor, UPARAM(ref) FDamageEffectParams& OutParams);
 };

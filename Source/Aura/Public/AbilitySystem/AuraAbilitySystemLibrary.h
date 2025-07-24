@@ -115,4 +115,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffect")
 	static FGameplayEffectContextHandle ApplyDamageEffect(const FDamageEffectParams& Params);
+
+	// Spawn Proejectiles
+	UFUNCTION(BlueprintPure,  Category = "AuraAbilitySystemLibrary|GameplayMechanics")
+	static TArray<FRotator> GetEvenlySpreadRotators(const FVector& Forward, const FVector& Axis, float Spread, float ProjectileCount);
+	
+	UFUNCTION(BlueprintPure,  Category = "AuraAbilitySystemLibrary|GameplayMechanics")
+	static TArray<FVector> GetEvenlySpreadVectors(const FVector& Forward, const FVector& Axis, float Spread, float ProjectileCount);
 };

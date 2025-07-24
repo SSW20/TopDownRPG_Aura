@@ -52,7 +52,8 @@ public:
 	void ClearAbilitiesFromInputTag(const FGameplayTag& InputTag);
 	void ClearInputTagBySpec(FGameplayAbilitySpec* AbilitySpec);
 	bool HasInputTag(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& InputTag);
-	
+
+	void PlayIfPressed(const FGameplayTag& InputTag);
 	void PlayIfHeld(const FGameplayTag& InputTag);
 	void PlayIfReleased(const FGameplayTag& InputTag);
 

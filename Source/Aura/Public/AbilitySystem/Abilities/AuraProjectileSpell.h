@@ -29,7 +29,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
 	void SpawnProjectileInBluePrint(const FVector& TargetLocation, const bool bIsPitched, const float Pitch);
 	
-
+	void SpawnProjectile(const FRotator& SpawnRotator, const FVector& SpawnLocation, const AActor* HomingTarget, const bool bHoming) const;
 	
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
@@ -37,4 +37,10 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly)
 	int32 NumProjectiles = 5;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 HomingAccelarationMax = 3200.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 HomingAccelarationMin = 1600.f;
 };

@@ -25,7 +25,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 	FDamageEffectParams DamageEffectParams;
-
+	UPROPERTY()
+	TObjectPtr<USceneComponent> HomingTargetSceneComponent;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -63,5 +64,7 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float LifeSpan = 10.f;
+
+
 
 };

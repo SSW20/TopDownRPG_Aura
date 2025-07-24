@@ -43,6 +43,12 @@ public:
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
 
+	// Input Block Tag
+	FGameplayTag Player_Block_InputPressed;
+	FGameplayTag Player_Block_InputHeld;
+	FGameplayTag Player_Block_InputReleased;
+	FGameplayTag Player_Block_CursorTrace;
+
 	// Input Passive Tag
 	FGameplayTag InputTag_Passive_1;
 	FGameplayTag InputTag_Passive_2;

@@ -54,7 +54,11 @@ void AAuraProjectile::OnHit()
 {
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, HitEffect, GetActorLocation());
-	if (LoopSoundComponent)	LoopSoundComponent->Stop();
+	if (LoopSoundComponent)
+	{
+		LoopSoundComponent->Stop();	
+		LoopSoundComponent->DestroyComponent();
+	}
 }
 
 void AAuraProjectile::Destroyed()
@@ -62,6 +66,12 @@ void AAuraProjectile::Destroyed()
 	//코드가 서버가 아닌 클라이언트에서 실행되고 있을 때.
     //서버는 OnSphereOverlap에서 이미 효과를 처리하거나, 클라이언트의 중복 재생을 막음
 	//서버의 Destroy가 먼저 도착했을 때 클라이언트가 효과를 재생
+	if (LoopSoundComponent)
+	{
+		LoopSoundComponent->Stop();	
+		LoopSoundComponent->DestroyComponent();
+	}
+	
 	if (!bIsPlaying && !HasAuthority()) OnHit();
 	Super::Destroyed();
 }

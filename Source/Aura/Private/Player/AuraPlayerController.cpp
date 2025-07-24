@@ -12,6 +12,7 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "AuraGameplayTags.h"
+#include "NiagaraFunctionLibrary.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/FloatingDamageText.h"
 
@@ -46,6 +47,15 @@ void AAuraPlayerController::ShowDamageNumber_Implementation(float Damage, AChara
 
 void AAuraPlayerController::CursorTrace()
 {
+	// Player Block CursorTrace를 가지고 있을 시 Cursor Trace를 하지 않음
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_CursorTrace))
+	{
+		if (LastActor) LastActor->UnHighlightActor();
+		if (ThisActor) ThisActor->UnHighlightActor();
+		LastActor = nullptr;
+		ThisActor = nullptr;
+		return;
+	}
 	FHitResult CursorHit;
 	GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, CursorHit);
 
@@ -109,16 +119,25 @@ void AAuraPlayerController::CursorTrace()
 
 void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+	{
+		return;
+	}
 	//GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Red, FString::Printf(TEXT("Pressed: %s"), *InputTag.ToString()));
 	if(FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
 		bTargeting = ThisActor ? true : false;
 		bAutoRunning = false;
+		if (GetASC()) GetASC()->PlayIfPressed(InputTag);
 	}
 }
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputReleased))
+	{
+		return;
+	}
 	if (!FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
 		GetASC()->PlayIfReleased(InputTag);
@@ -141,10 +160,17 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 					Spline->AddSplinePoint(Path, ESplineCoordinateSpace::World);
 				}
 				if (NavPath->PathPoints.Num() > 0)
-				{CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];}
+				{
+					CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+				}
 			}
 			bAutoRunning = true;
-		
+			if (GetASC() && !GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+			{
+				// 추적 후 제일 마지막 위치에서 Spawn
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem,CachedDestination);
+			}
+			
 		}
 		FollowTime = 0.f;
 	}
@@ -152,6 +178,10 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputHeld))
+	{
+		return;
+	}
 	if (!FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
 		GetASC()->PlayIfHeld(InputTag);
@@ -258,6 +288,10 @@ void AAuraPlayerController::SetupInputComponent()
 
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+	{
+		return;
+	}
 	// 좌우 회전값 == Yaw 값만 남김
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 

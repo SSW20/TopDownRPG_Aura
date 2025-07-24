@@ -84,5 +84,11 @@ public:
 	ECharacterClass GetCharacterClass();
 
 	virtual FOnASCRegistered GetASCRegistered() = 0;
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetInShockLoop(bool bInLoop);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	USkeletalMeshComponent* GetWeapon();
 	
 };

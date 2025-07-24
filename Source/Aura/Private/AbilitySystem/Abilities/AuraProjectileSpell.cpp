@@ -8,6 +8,7 @@
 #include "GameplayEffect.h"
 #include "AuraGameplayTags.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 void UAuraProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -72,5 +73,45 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
 	FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
 
 	Projectile->DamageEffectParams = MakeDamgeEffectParamsFromClassDefaults();
+	Projectile->FinishSpawning(SpawnTransform);
+}
+
+void UAuraProjectileSpell::SpawnProjectile(const FRotator& SpawnRotator, const FVector& SpawnLocation, const AActor* HomingTarget, const bool bHoming) const
+{
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(SpawnLocation);
+	SpawnTransform.SetRotation(SpawnRotator.Quaternion());
+		
+	//SpawnActorDeferred: 액터를 즉시 스폰하지 않고, 모든 속성을 설정한 후 나중에 FinishSpawning으로 스폰을 완료할 수 있게 해주는 함수
+	AAuraProjectile* Projectile = GetWorld()->SpawnActorDeferred<AAuraProjectile>(
+		ProjectileClass,
+		SpawnTransform,
+		GetOwningActorFromActorInfo(),
+		Cast<APawn>(GetOwningActorFromActorInfo()),
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+	);
+
+	//TODO : 맞았을 때 게임플레이 이펙트 
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+	FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DamageEffectClass, 1.f, ContextHandle);
+
+	Projectile->DamageEffectParams = MakeDamgeEffectParamsFromClassDefaults();
+	
+	if (bHoming)
+	{
+		if (HomingTarget->Implements<UCombatInterface>())
+		{
+			Projectile->ProjectileMovement->HomingTargetComponent = HomingTarget->GetRootComponent();
+		}
+		else
+		{
+			Projectile->HomingTargetSceneComponent = NewObject<USceneComponent>(USceneComponent::StaticClass());
+			Projectile->ProjectileMovement->HomingTargetComponent = Projectile->HomingTargetSceneComponent;
+			Projectile->ProjectileMovement->HomingTargetComponent->SetWorldLocation(HomingTarget->GetActorLocation());
+		}
+		Projectile->ProjectileMovement->HomingAccelerationMagnitude = FMath::RandRange(HomingAccelarationMin, HomingAccelarationMax);
+		Projectile->ProjectileMovement->bIsHomingProjectile = bHoming;
+	}
 	Projectile->FinishSpawning(SpawnTransform);
 }

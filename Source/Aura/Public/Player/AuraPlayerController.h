@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Input/AuraInputConfig.h"
 #include "GameplayTagContainer.h"
+#include "NiagaraSystem.h"
 #include "AuraPlayerController.generated.h"
 
 class UFloatingDamageText;
@@ -96,4 +97,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UFloatingDamageText> DamageTextClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UNiagaraSystem> ClickNiagaraSystem;
 };

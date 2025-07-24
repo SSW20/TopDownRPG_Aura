@@ -57,14 +57,6 @@ FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDe
 
 	DamageEffectParams.KnockbackMagnitude = KnockbackMagnitude;
 	DamageEffectParams.KnockbackChance = KnockbackChance;
-
-	if (TargetActor)
-	{
-		FRotator KnockbackRotator = GetAvatarActorFromActorInfo()->GetActorRotation();
-		KnockbackRotator.Pitch = 45.f;
-		const FVector KnockbackForce = KnockbackRotator.Vector() * DamageEffectParams.KnockbackMagnitude;
-		DamageEffectParams.KnockbackImpulseVector = KnockbackForce;
-	}
 	
 	return DamageEffectParams;
 	

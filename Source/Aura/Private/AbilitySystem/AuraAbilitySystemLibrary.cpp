@@ -247,6 +247,49 @@ FGameplayEffectContextHandle UAuraAbilitySystemLibrary::ApplyDamageEffect(const 
 	return ContextHandle;
 }
 
+TArray<FRotator> UAuraAbilitySystemLibrary::GetEvenlySpreadRotators(const FVector& Forward, const FVector& Axis,
+	float Spread, float ProjectileCount)
+{
+	TArray<FRotator> Rotators;
+	if (ProjectileCount > 1)
+	{
+		const FVector SpreadL = Forward.RotateAngleAxis(-Spread / 2.f, Axis);
+		// 양쪽으로 퍼질 수 있게
+		const float DeltaSpread = Spread / (ProjectileCount - 1);
+		for (int i = 0; i < ProjectileCount; i++)
+		{
+			const FVector Direction = SpreadL.RotateAngleAxis(i * DeltaSpread, Axis);
+			Rotators.Add(Direction.Rotation());
+		}
+	}
+	else
+	{
+		Rotators.Add(Forward.Rotation());
+	}
+	return Rotators;
+}
+
+TArray<FVector> UAuraAbilitySystemLibrary::GetEvenlySpreadVectors(const FVector& Forward, const FVector& Axis,
+	float Spread, float ProjectileCount)
+{
+	TArray<FVector> Rotators;
+	if (ProjectileCount > 1)
+	{
+		const FVector SpreadL = Forward.RotateAngleAxis(-Spread / 2.f, Axis);
+		// 양쪽으로 퍼질 수 있게
+		const float DeltaSpread = Spread / (ProjectileCount - 1);
+		for (int i = 0; i < ProjectileCount; i++)
+		{
+			const FVector Direction = SpreadL.RotateAngleAxis(i * DeltaSpread, Axis);
+			Rotators.Add(Direction);
+		}
+	}
+	else
+	{
+		Rotators.Add(Forward);
+	}
+	return Rotators;
+}
 
 
 bool UAuraAbilitySystemLibrary::IsDebuffSuccess(const FGameplayEffectContextHandle& EffectContextHandle)
