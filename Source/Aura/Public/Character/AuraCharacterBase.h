@@ -23,6 +23,8 @@ class AURA_API AAuraCharacterBase : public ACharacter, public IAbilitySystemInte
 	GENERATED_BODY()
 
 public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	// Sets default values for this character's properties
 	AAuraCharacterBase();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -36,7 +38,8 @@ public:
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetActor_Implementation() override;
-	virtual void Die(const FVector& DeathImpuseVector) override;
+	virtual void Die(const FVector& DeathImpulseVector) override;
+	virtual FOnDeathSignature& GetOnDeathDelegate() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& Tag) override;
@@ -46,8 +49,19 @@ public:
 	virtual FOnASCRegistered GetASCRegistered() override;
 	virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
 	/* End Combat Interface */
+
+	UPROPERTY(ReplicatedUsing=OnRep_Stunned, BlueprintReadOnly)
+	bool bIsStunned = false;
+
+	UFUNCTION()
+	virtual void OnRep_Stunned();
 	
 protected:
+	virtual void StunTagChanged(const FGameplayTag Tag, int32 Count);
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Combat")
+	float MoveSpeed = 600.f;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo();
@@ -127,8 +141,16 @@ protected:
 	// ASC Delegate
 	FOnASCRegistered ASCRegisteredDelegate;
 
+	
+	FOnDeathSignature OnDeathDelegate;
 
 	// Debuff Niagara Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDebuffNiagaraComponent> BurnNiagaraComponent;
 };
+
+inline void AAuraCharacterBase::OnRep_Stunned()
+{
+}
+
+

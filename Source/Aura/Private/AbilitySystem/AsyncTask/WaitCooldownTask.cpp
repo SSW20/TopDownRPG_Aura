@@ -42,6 +42,7 @@ void UWaitCooldownTask::EndTask()
     // RemoveAll: 이 객체에 바인딩된 모든 콜백을 제거
     ASC->RegisterGameplayTagEvent(CooldownTag, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
 
+
     // 태스크가 완전히 완료되었음을 시스템에 알립니다.
     // SetReadyToDestroy(): 이 액션이 더 이상 필요 없으며 삭제될 준비가 되었음을 나타냅니다.
     SetReadyToDestroy();
@@ -54,11 +55,10 @@ void UWaitCooldownTask::EndTask()
 void UWaitCooldownTask::CooldownChanged(const FGameplayTag Tag, int32 Count)
 {
     // 태그 카운트가 0이면 쿨다운이 종료되었음을 의미
-    if (Count == 0)
-    {
-       CooldownEnd.Broadcast(0.f);
-       EndTask(); // 쿨다운 종료 시 태스크를 정리하고 파괴
-    }
+	if (Count == 0)
+	{
+		CooldownEnd.Broadcast(0.f);
+	}
 }
 
 // ActiveGameplayEffect가 ASC에 추가될 때 호출되는 콜백 함수 구현

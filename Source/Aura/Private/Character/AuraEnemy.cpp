@@ -33,6 +33,8 @@ AAuraEnemy::AAuraEnemy()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	MoveSpeed = 250.f;
 	
 }
 void AAuraEnemy::HighlightActor()
@@ -145,7 +147,7 @@ void AAuraEnemy::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
-
+	AbilitySystemComponent->RegisterGameplayTagEvent(FAuraGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AAuraEnemy::StunTagChanged); 
 	if (HasAuthority())
 	{
 		InitializeDefaultAttributes();
@@ -159,6 +161,15 @@ void AAuraEnemy::InitializeDefaultAttributes() const
 {
 	UAuraAbilitySystemLibrary::InitDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
 
+}
+
+void AAuraEnemy::StunTagChanged(const FGameplayTag Tag, int32 Count)
+{
+	Super::StunTagChanged(Tag, Count);
+	if (AIController && AIController->GetBlackboardComponent())
+	{
+		AIController->GetBlackboardComponent()->SetValueAsBool(FName("Stunned"), bIsStunned);
+	}
 }
 
 void AAuraEnemy::Die(const FVector& DeathImpulseVector)

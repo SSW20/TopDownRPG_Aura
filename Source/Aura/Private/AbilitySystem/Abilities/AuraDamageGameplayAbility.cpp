@@ -69,3 +69,8 @@ FTaggedMontage UAuraDamageGameplayAbility::GetTaggedMontageInArray(const TArray<
 	return TaggedMontages[index];
 }
 
+
+float UAuraDamageGameplayAbility::GetDamageAtLevel() const
+{
+	return Damage.GetValueAtLevel(GetAbilityLevel());
+}

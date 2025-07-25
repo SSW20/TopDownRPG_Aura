@@ -308,13 +308,19 @@ void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 		{
 			const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
 			const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-			PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+			if (IncomeDamage > 0.f)
+			{
+				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit); 
+			}
 		}
 		if (AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.TargetController))
 		{
 			const bool bIsBlocked = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
 			const bool bIsCriticalHit = UAuraAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-			PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+			if (IncomeDamage > 0.f)
+			{
+				PC->ShowDamageNumber(IncomeDamage, Props.TargetCharacter, bIsBlocked, bIsCriticalHit);
+			}
 		}
 
 		if (UAuraAbilitySystemLibrary::IsDebuffSuccess(Props.EffectContextHandle))
@@ -359,9 +365,29 @@ void UAuraAttributeSet::HandleDebuff(FEffectProperties& Props)
 	FInheritedTagContainer TagContainer = FInheritedTagContainer();
 	UTargetTagsGameplayEffectComponent& Component = Effect->FindOrAddComponent<UTargetTagsGameplayEffectComponent>();
 	TagContainer.Added.AddTag(Tags.DamageTypesToDebuff[DamageTypeTag]);
+
+	// 디버프 태그가 Stun이라면 모든 입력을 막음
+	// 하지만 이는 서버에서만 작동해서 따로 클라에서도 만들어줘야됨-->OnRepStun
+	if (Tags.DamageTypesToDebuff[DamageTypeTag].MatchesTagExact(Tags.Debuff_Stun))
+	{
+		TagContainer.Added.AddTag(Tags.Player_Block_CursorTrace);
+		TagContainer.CombinedTags.AddTag(Tags.Player_Block_CursorTrace);
+
+		TagContainer.Added.AddTag(Tags.Player_Block_InputHeld);
+		TagContainer.CombinedTags.AddTag(Tags.Player_Block_InputHeld);
+
+		TagContainer.Added.AddTag(Tags.Player_Block_InputPressed);
+		TagContainer.CombinedTags.AddTag(Tags.Player_Block_InputPressed);
+		
+		TagContainer.Added.AddTag(Tags.Player_Block_InputReleased);
+		TagContainer.CombinedTags.AddTag(Tags.Player_Block_InputReleased);
+	}
+	
 	TagContainer.CombinedTags.AddTag(Tags.DamageTypesToDebuff[DamageTypeTag]);
 	Component.SetAndApplyTargetTagChanges(TagContainer);
+	
 
+		
 	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
 	Effect->StackLimitCount = 1;
 

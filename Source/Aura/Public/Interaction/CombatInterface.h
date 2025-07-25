@@ -12,7 +12,7 @@
 // This class does not need to be modified.
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnASCRegistered, UAbilitySystemComponent*);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DeadActor);
 
 UINTERFACE(MinimalAPI, BlueprintType)
 class UCombatInterface : public UInterface
@@ -73,7 +73,9 @@ public:
 	void IncreaseSummonCount(int32 AddValue);
 	
 	virtual void Die(const FVector& DeathImpuseVector) = 0;
-
+	
+	virtual FOnDeathSignature& GetOnDeathDelegate() = 0;
+	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	TArray<FTaggedMontage> GetTaggedMontages();
 
@@ -90,5 +92,6 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	USkeletalMeshComponent* GetWeapon();
+
 	
 };

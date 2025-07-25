@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AuraGameplayTags.h"
+#include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
 
 
 UExecCalc_Damage::UExecCalc_Damage()
@@ -52,7 +53,6 @@ void UExecCalc_Damage::DetermineDebuff(const FGameplayEffectCustomExecutionParam
 			{
 				// 이제 디버프 걸렸음 뭐함?
 				// 값 정해졌으니 해줘야제
-
 				FGameplayEffectContextHandle EffectContext = EffectSpec.GetContext();
 				
 				UAuraAbilitySystemLibrary::SetIsDebuffSuccess(EffectContext, true);

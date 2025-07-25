@@ -5,7 +5,16 @@
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Aura/Aura.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+
+void AAuraCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AAuraCharacterBase, bIsStunned);
+}
+
 // Sets default values
 AAuraCharacterBase::AAuraCharacterBase()
 {
@@ -32,6 +41,12 @@ AAuraCharacterBase::AAuraCharacterBase()
 UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const 
 {
 	return AbilitySystemComponent;
+}
+
+void AAuraCharacterBase::StunTagChanged(const FGameplayTag Tag, int32 Count)
+{
+	bIsStunned = Count > 0;
+	GetCharacterMovement()->MaxWalkSpeed = bIsStunned ? 0.f : MoveSpeed;
 }
 
 // Called when the game starts or when spawned
@@ -101,10 +116,10 @@ AActor* AAuraCharacterBase::GetActor_Implementation()
 	return this;
 }
 
-void AAuraCharacterBase::Die(const FVector& DeathImpuseVector)
+void AAuraCharacterBase::Die(const FVector& DeathImpulseVector)
 {
 	Weapon->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-	MulticastHandleDeath(DeathImpuseVector);
+	MulticastHandleDeath(DeathImpulseVector);
 }
 
 TArray<FTaggedMontage> AAuraCharacterBase::GetTaggedMontages_Implementation()
@@ -168,6 +183,7 @@ void AAuraCharacterBase::MulticastHandleDeath_Implementation(const FVector& Deat
 
 	bDead = true;
 	BurnNiagaraComponent->Deactivate();
+	OnDeathDelegate.Broadcast(this);
 }
 
 void AAuraCharacterBase::Dissolve()
@@ -203,4 +219,9 @@ void AAuraCharacterBase::InitializeDefaultAttributes() const
 USkeletalMeshComponent* AAuraCharacterBase::GetWeapon_Implementation()
 {
 	return Weapon;
+}
+
+FOnDeathSignature& AAuraCharacterBase::GetOnDeathDelegate()
+{
+	return OnDeathDelegate;
 }

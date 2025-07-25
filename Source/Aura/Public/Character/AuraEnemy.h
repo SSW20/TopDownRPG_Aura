@@ -52,15 +52,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsReacting = false;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Combat")
-	float MoveSpeed = 250.f;
+
 
 	virtual void PossessedBy(AController* NewController) override;
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void InitializeDefaultAttributes() const override;
-
+	virtual void StunTagChanged(const FGameplayTag Tag, int32 Count) override;
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Character Class Defaults")
 	int32 Level = 1;
 

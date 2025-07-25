@@ -2,6 +2,8 @@
 
 
 #include "Character/AuraCharacter.h"
+
+#include "AuraGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/AuraPlayerState.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
@@ -40,6 +42,28 @@ AAuraCharacter::AAuraCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraSpringArm, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false;
 }
+
+void AAuraCharacter::OnRep_Stunned()
+{
+	if (UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		FGameplayTagContainer GameplayTags;
+		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_CursorTrace);
+		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputHeld);
+		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputPressed);
+		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputReleased);
+
+		if (bIsStunned)
+		{
+			AuraASC->AddLooseGameplayTags(GameplayTags);
+		}
+		else
+		{
+			AuraASC->RemoveLooseGameplayTags(GameplayTags);
+		}
+	}
+}
+
 void AAuraCharacter::BeginPlay()
 {
     Super::BeginPlay();
@@ -62,6 +86,7 @@ void AAuraCharacter::InitAbilityActorInfo()
 	AuraPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(AuraPlayerState, this);
 	Cast<UAuraAbilitySystemComponent>(AuraPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
 	AbilitySystemComponent = AuraPlayerState->GetAbilitySystemComponent();
+	AbilitySystemComponent->RegisterGameplayTagEvent(FAuraGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AAuraCharacter::StunTagChanged); 
 	ASCRegisteredDelegate.Broadcast(AbilitySystemComponent);
 	AttributeSet = AuraPlayerState->GetAttributeSet();
 	
@@ -75,6 +100,8 @@ void AAuraCharacter::InitAbilityActorInfo()
 	}
 	
 	InitializeDefaultAttributes();
+
+	
 }
 
 void AAuraCharacter::MulticastLevelUpParticles_Implementation() const
