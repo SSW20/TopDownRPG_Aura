@@ -273,8 +273,10 @@ FGameplayEffectContextHandle UAuraAbilitySystemLibrary::ApplyDamageEffect(const 
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Tags.Debuff_Duration, Params.DebuffDuration);
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Tags.Debuff_Frequency, Params.DebuffFrequency);
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Tags.Debuff_Damage, Params.DebuffDamage);
+
 	
 	Params.TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
 
 	return ContextHandle;
 }

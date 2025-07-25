@@ -43,6 +43,7 @@ public:
 	TObjectPtr<UNiagaraComponent> LevelUpNiagaraComponent;
 
 	virtual void OnRep_Stunned() override;
+	virtual void OnRep_Burned() override;
 protected:
 	virtual void BeginPlay() override;
 

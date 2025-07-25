@@ -54,7 +54,6 @@ FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDe
 	DamageEffectParams.DebuffDuration = DebuffDuration;
 
 	DamageEffectParams.DeathImpulseMagnitude = DeathImpulseMagnitude;
-
 	DamageEffectParams.KnockbackMagnitude = KnockbackMagnitude;
 	DamageEffectParams.KnockbackChance = KnockbackChance;
 	

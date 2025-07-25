@@ -59,6 +59,13 @@ int32 AAuraEnemy::GetPlayerLevel_Implementation() const
 {
 	return Level;
 }
+
+void AAuraEnemy::SetIsShocking_Implementation(bool IsShocking)
+{
+	Super::SetIsShocking_Implementation(IsShocking);
+	AIController->GetBlackboardComponent()->SetValueAsBool(FName("Shocking"), IsShocking);
+}
+
 void AAuraEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
 {
 	CombatTarget = InCombatTarget;

@@ -40,6 +40,7 @@ public:
 	
 	// Start Combat Interface
 	virtual int32 GetPlayerLevel_Implementation() const override;
+	virtual void SetIsShocking_Implementation(bool IsShocking) override;
 
 	// End Combat Interface
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")

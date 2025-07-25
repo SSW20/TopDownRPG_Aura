@@ -280,10 +280,15 @@ void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 		
 	if (!bIsDead)
 	{
-		FGameplayTagContainer TagContainer;
-		TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
-			
-		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActor())->TryActivateAbilitiesByTag(TagContainer);
+		const FGameplayTag DamageTypeTag =  UAuraAbilitySystemLibrary::GetDamageType(Props.EffectContextHandle);
+		
+		if (Props.TargetCharacter->Implements<UCombatInterface>() && !ICombatInterface::Execute_IsShocking(Props.TargetCharacter))
+		{
+			FGameplayTagContainer TagContainer;
+			TagContainer.AddTag(FAuraGameplayTags::Get().Effect_HitReact);
+			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+		}
+		
 
 		const FVector& KnockbackForce = UAuraAbilitySystemLibrary::GetKnockbackImpulsVector(Props.EffectContextHandle);
 		if (!KnockbackForce.IsNearlyZero(1.f))

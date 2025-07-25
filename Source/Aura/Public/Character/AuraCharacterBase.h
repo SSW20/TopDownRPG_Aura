@@ -46,15 +46,26 @@ public:
 	virtual int32 GetSummonCount_Implementation() override;
 	virtual void IncreaseSummonCount_Implementation(int32 AddValue) override;
 	virtual ECharacterClass GetCharacterClass_Implementation() override;
-	virtual FOnASCRegistered GetASCRegistered() override;
+	virtual FOnASCRegistered& GetASCRegistered() override;
 	virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
+	virtual void SetIsShocking_Implementation(bool IsShocking) override;
+	virtual bool IsShocking_Implementation() const override;
 	/* End Combat Interface */
 
 	UPROPERTY(ReplicatedUsing=OnRep_Stunned, BlueprintReadOnly)
 	bool bIsStunned = false;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Burned, BlueprintReadOnly)
+	bool bIsBurned = true;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsShocking = false;
+	
 	UFUNCTION()
 	virtual void OnRep_Stunned();
+
+	UFUNCTION()
+	virtual void OnRep_Burned();
 	
 protected:
 	virtual void StunTagChanged(const FGameplayTag Tag, int32 Count);
@@ -147,6 +158,9 @@ protected:
 	// Debuff Niagara Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDebuffNiagaraComponent> BurnNiagaraComponent;
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UDebuffNiagaraComponent> StunNiagaraComponent;
 };
 
 inline void AAuraCharacterBase::OnRep_Stunned()

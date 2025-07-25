@@ -13,6 +13,8 @@ void AAuraCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AAuraCharacterBase, bIsStunned);
+	DOREPLIFETIME(AAuraCharacterBase, bIsBurned);
+	DOREPLIFETIME(AAuraCharacterBase, bIsShocking);
 }
 
 // Sets default values
@@ -25,6 +27,10 @@ AAuraCharacterBase::AAuraCharacterBase()
 	BurnNiagaraComponent->SetupAttachment(GetRootComponent());
 	BurnNiagaraComponent->DebuffTag = FAuraGameplayTags::Get().Debuff_Burn;
 
+	StunNiagaraComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>(TEXT("StunDebuffNiagaraComponent"));
+	StunNiagaraComponent->SetupAttachment(GetRootComponent());
+	StunNiagaraComponent->DebuffTag = FAuraGameplayTags::Get().Debuff_Stun;
+
 	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
 	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -34,13 +40,15 @@ AAuraCharacterBase::AAuraCharacterBase()
 
 	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
-
-	
 }
 
 UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const 
 {
 	return AbilitySystemComponent;
+}
+
+void AAuraCharacterBase::OnRep_Burned()
+{
 }
 
 void AAuraCharacterBase::StunTagChanged(const FGameplayTag Tag, int32 Count)
@@ -159,7 +167,7 @@ ECharacterClass AAuraCharacterBase::GetCharacterClass_Implementation()
 	return CharacterClass;
 }
 
-FOnASCRegistered AAuraCharacterBase::GetASCRegistered()
+FOnASCRegistered& AAuraCharacterBase::GetASCRegistered()
 {
 	return ASCRegisteredDelegate;
 }
@@ -183,6 +191,7 @@ void AAuraCharacterBase::MulticastHandleDeath_Implementation(const FVector& Deat
 
 	bDead = true;
 	BurnNiagaraComponent->Deactivate();
+	StunNiagaraComponent->Deactivate();
 	OnDeathDelegate.Broadcast(this);
 }
 
@@ -218,7 +227,17 @@ void AAuraCharacterBase::InitializeDefaultAttributes() const
 
 USkeletalMeshComponent* AAuraCharacterBase::GetWeapon_Implementation()
 {
-	return Weapon;
+	return Weapon; 
+}
+
+void AAuraCharacterBase::SetIsShocking_Implementation(bool IsShocking)
+{
+	bIsShocking = IsShocking;
+}
+
+bool AAuraCharacterBase::IsShocking_Implementation() const
+{
+	return bIsShocking;
 }
 
 FOnDeathSignature& AAuraCharacterBase::GetOnDeathDelegate()

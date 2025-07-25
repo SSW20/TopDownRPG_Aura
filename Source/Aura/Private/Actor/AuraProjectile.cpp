@@ -17,7 +17,7 @@ AAuraProjectile::AAuraProjectile()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true; // 투사체 복제 활성화
-
+	
 	Sphere = CreateDefaultSubobject<USphereComponent>("Projectile Sphere");
 	SetRootComponent(Sphere);
 	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
@@ -37,6 +37,8 @@ AAuraProjectile::AAuraProjectile()
 void AAuraProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	SetReplicateMovement(true);
+
 	//OnComponentBeginOverlap << Signature
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AAuraProjectile::OnSphereOverlap);
 	LoopSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopSound, GetRootComponent());
@@ -78,6 +80,8 @@ void AAuraProjectile::Destroyed()
 
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (DamageEffectParams.SourceAbilitySystemComponent == nullptr) return;
+	
 	//투사체가 발사자(주인) 자신을 때리는 경우를 방지, 
 	//만약 코드가 없었다면 자신을 맞추고 Destroy --> 다른 액터를 맞춰도 이미 사라진 상태임
 	AActor* SourceActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();

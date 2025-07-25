@@ -52,7 +52,7 @@ void AAuraCharacter::OnRep_Stunned()
 		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputHeld);
 		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputPressed);
 		GameplayTags.AddTag(FAuraGameplayTags::Get().Player_Block_InputReleased);
-
+		GameplayTags.AddTag(FAuraGameplayTags::Get().Debuff_Stun);
 		if (bIsStunned)
 		{
 			AuraASC->AddLooseGameplayTags(GameplayTags);
@@ -62,6 +62,22 @@ void AAuraCharacter::OnRep_Stunned()
 			AuraASC->RemoveLooseGameplayTags(GameplayTags);
 		}
 	}
+}
+
+void AAuraCharacter::OnRep_Burned()
+{
+	if (UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		if (bIsBurned)
+		{
+			AuraASC->AddLooseGameplayTag(FAuraGameplayTags::Get().Debuff_Burn);
+		}
+		else
+		{
+			AuraASC->RemoveLooseGameplayTag(FAuraGameplayTags::Get().Debuff_Burn);
+		}
+	}
+	
 }
 
 void AAuraCharacter::BeginPlay()
