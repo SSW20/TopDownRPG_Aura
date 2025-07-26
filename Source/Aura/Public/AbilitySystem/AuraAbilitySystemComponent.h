@@ -23,6 +23,7 @@ DECLARE_MULTICAST_DELEGATE_ThreeParams(FAblityStatusTags, const FGameplayTag&  /
 DECLARE_MULTICAST_DELEGATE_FourParams(FAblityInfoTags, const FGameplayTag&  /*Ability Tag*/,
 	const FGameplayTag& /*Status Tag*/, const FGameplayTag&  /*Input Slot Tag*/, const FGameplayTag& /*Prev Input Slot Tag*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FPassiveTag, const FGameplayTag&  /*Passive Ability Tag*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FActivatePassive, const FGameplayTag&, bool);
 	
 UCLASS()
 class AURA_API UAuraAbilitySystemComponent : public UAbilitySystemComponent
@@ -34,6 +35,7 @@ public:
 	FAblityStatusTags AbilityStatusTagsDelegate;
 	FAblityInfoTags AbilityInfoTagsDelegate;
 	FPassiveTag DeactivatePassiveTagDelegate;
+	FActivatePassive ActivatePassiveDelegate;
 	bool bIsStartUpAbilitiesBroadCasted = false;
 	
 	void AbilityActorInfoSet();
@@ -47,13 +49,16 @@ public:
 	static FGameplayTag GetStatusTagFromSpec(const FGameplayAbilitySpec& AbilitySpec);
 	FGameplayTag GetStatusTagFromAbilityTag(const FGameplayTag& AbilityTag);
 	FGameplayTag GetInputFromAbilityTag(const FGameplayTag& AbilityTag);
+	bool SlotIsEmpty(const FGameplayTag& SlotTag);
+	bool IsPassiveAbility(const FGameplayAbilitySpec& Spec);
 
 	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& Tag);
 	FGameplayAbilitySpec* GetSpecFromInputTag(const FGameplayTag& InputTag);
 
 	void ClearAbilitiesFromInputTag(const FGameplayTag& InputTag);
-	void ClearInputTagBySpec(FGameplayAbilitySpec* AbilitySpec);
+	static void ClearInputTagBySpec(FGameplayAbilitySpec* AbilitySpec);
 	bool HasInputTag(const FGameplayAbilitySpec& AbilitySpec, const FGameplayTag& InputTag);
+	bool AbilityHasInputTag(const FGameplayAbilitySpec& AbilitySpec);
 
 	void PlayIfPressed(const FGameplayTag& InputTag);
 	void PlayIfHeld(const FGameplayTag& InputTag);
@@ -70,7 +75,14 @@ public:
 	UFUNCTION(Server,Reliable)
 	void ServerEquipAbility(const FGameplayTag& SlotInputTag, const FGameplayTag& AbilityTag);
 
+	UFUNCTION(NetMulticast,Unreliable)
+	void MulticastActivatePassiveEffect(const FGameplayTag& PassiveTag, bool bActive);
+
+	FGameplayAbilitySpec* GetSpecWithSlot(const FGameplayTag& Slot);
+	void AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot);
 	bool GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription);
+
+	UFUNCTION(Client, Reliable)
 	void ClientEquipAbility(const FGameplayTag&  AbilityTag, const FGameplayTag& StatusTag, const FGameplayTag&  InputSlotTag, const FGameplayTag& PrevInputSlotTag);
 protected:
 

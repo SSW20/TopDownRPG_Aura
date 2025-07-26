@@ -237,23 +237,29 @@ void UAuraAttributeSet::HandleIncomingExp(FEffectProperties& Props)
 		
 	if (Props.SourceCharacter->Implements<UPlayerInterface>())
 	{
-		IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
-
 		//	Level Up 계산 
-		int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
-		int32 CurrentExp = IPlayerInterface::Execute_GetExp(Props.SourceCharacter);
+		const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+		const int32 CurrentExp = IPlayerInterface::Execute_GetExp(Props.SourceCharacter);
 
+		IPlayerInterface::Execute_AddExp(Props.SourceCharacter,LocalIncomingExp);
+		
 		int32 NewLevel = IPlayerInterface::Execute_GetLevelByExp(Props.SourceCharacter, CurrentExp + LocalIncomingExp);
 		// Level Up
 		if (NewLevel > CurrentLevel)
 		{
-			int32 AttributePoint = IPlayerInterface::Execute_GetAttributePointReward(Props.SourceCharacter, NewLevel);
-			int32 SkillPoint = IPlayerInterface::Execute_GetSkillPointReward(Props.SourceCharacter, NewLevel);
-
+			int32 LevelUpAmount = NewLevel - CurrentLevel;
+			int32 AttributePoint = 0;
+			int32 SkillPoint = 0;
+			for (int32 i = 1; i <= LevelUpAmount; i++)
+			{
+				AttributePoint += IPlayerInterface::Execute_GetAttributePointReward(Props.SourceCharacter, CurrentLevel  + i);
+				SkillPoint += IPlayerInterface::Execute_GetSkillPointReward(Props.SourceCharacter, CurrentLevel + i);
+			}
+			
 			// Add Attribute Point, Skill Point, Level
 			IPlayerInterface::Execute_AddAttributePoint(Props.SourceCharacter, AttributePoint);
 			IPlayerInterface::Execute_AddSkillPoint(Props.SourceCharacter, SkillPoint);
-			IPlayerInterface::Execute_AddLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
+			IPlayerInterface::Execute_AddLevel(Props.SourceCharacter,LevelUpAmount);
 				
 			// Update Mana, Health To Max
 			bIsMaxHealth = true;

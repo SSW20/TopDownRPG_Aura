@@ -72,33 +72,113 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 	}
 }
 
+// SlotInputTag == Equip버튼을 누른 후 클릭한 Globe의 input Tag, AbilityTag == Equip버튼을 누르기 전 Ability. 즉 장착할 어빌리티
 void UAuraAbilitySystemComponent::ServerEquipAbility_Implementation(const FGameplayTag& SlotInputTag, const FGameplayTag& AbilityTag)
 {
 	if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
 	{
+		// 장착할 어빌리티의 PrevSlotTag
 		const FGameplayTag& PrevSlotTag = GetInputTagFromSpec(*AbilitySpec);
-		
-		// slot Input Tag를 가지고 있는 모든 액티브 어빌리티 청소 
-		ClearAbilitiesFromInputTag(SlotInputTag);
+		const FGameplayTag& Status = GetStatusTagFromSpec(*AbilitySpec);
 
-		// 이제 AbilityTag로 Spec을 가져와
-		// Spec에 Inputtag지우고, Status바꿔
-		// 새로운 InputTag넣어주고 끝
-		ClearInputTagBySpec(AbilitySpec);
-		AbilitySpec->DynamicAbilityTags.AddTag(SlotInputTag);
-		
-		if (GetStatusTagFromSpec(*AbilitySpec).MatchesTagExact(FAuraGameplayTags::Get().Abilities_Status_Unlocked))
+		const bool bStatusValid = Status == FAuraGameplayTags::Get().Abilities_Status_Equipped || Status == FAuraGameplayTags::Get().Abilities_Status_Unlocked;
+		if (bStatusValid)
 		{
-			AbilitySpec->DynamicAbilityTags.RemoveTag(FAuraGameplayTags::Get().Abilities_Status_Unlocked);
-			AbilitySpec->DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
-		}
-	
-		MarkAbilitySpecDirty(*AbilitySpec);
+			// Slot이 비어있는지 아닌지 확인 하는 함수 
+			if (!SlotIsEmpty(SlotInputTag))
+			{
+				// 슬롯이 비어있지 않다면 
+				FGameplayAbilitySpec* PrevAbilitySpec = GetSpecWithSlot(SlotInputTag);
+				if (PrevAbilitySpec)
+				{
+					const FGameplayTag PrevAbilityTag = GetAbilityTagFromSpec(*PrevAbilitySpec);
+
+					// 만약 선택한 Ability와 전에 있던 Ability의 태그가 같다면 그냥 리턴
+					if (PrevAbilityTag.MatchesTagExact(AbilityTag))
+					{
+						ClientEquipAbility(AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Equipped,SlotInputTag, PrevSlotTag);	
+						return;
+					}
+					// 패시브인지 아닌지 확인
+					if (IsPassiveAbility(*PrevAbilitySpec))
+					{
+						// 슬롯에 있는 Passive Ability를 DeActive
+						DeactivatePassiveTagDelegate.Broadcast(GetAbilityTagFromSpec(*PrevAbilitySpec));
+						MulticastActivatePassiveEffect(PrevAbilityTag, false);
+					}
+
+					// 해당 Input Tag에 있는 Spec을 지움
+					ClearInputTagBySpec(PrevAbilitySpec);
+				}
+			}
+
+			// 이전에 있던 어빌리티를 Clear 후
+
+			if (!AbilityHasInputTag(*AbilitySpec))
+			{
+				// 만약 신규 어빌리티가 Input Tag를 가지고 있지 않다면
+
+				// 패시브일시
+				if (IsPassiveAbility(*AbilitySpec))
+				{
+					// Activate
+					TryActivateAbility(AbilitySpec->Handle);
+					MulticastActivatePassiveEffect(AbilityTag, true);
+				}
+			}
+			AssignSlotToAbility(*AbilitySpec, SlotInputTag);
+			MarkAbilitySpecDirty(*AbilitySpec);
 		
-		ClientEquipAbility(AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Equipped,SlotInputTag, PrevSlotTag);
+			//	이 로직의 문제점 --> 이전 슬롯의 어빌리티는 무엇인가? 모름 / 이전 슬롯이 Passive일시 DeActivate할 수 있나? 없음
+			//
+			// 
+			// // slot Input Tag를 가지고 있는 모든 액티브 어빌리티 청소 
+			// ClearAbilitiesFromInputTag(SlotInputTag);
+			//
+			// // 이제 AbilityTag로 Spec을 가져와
+			// // Spec에 Inputtag지우고, Status바꿔
+			// // 새로운 InputTag넣어주고 끝
+			// ClearInputTagBySpec(AbilitySpec);
+			// AbilitySpec->DynamicAbilityTags.AddTag(SlotInputTag);
+			//
+			// if (GetStatusTagFromSpec(*AbilitySpec).MatchesTagExact(FAuraGameplayTags::Get().Abilities_Status_Unlocked))
+			// {
+			// 	AbilitySpec->DynamicAbilityTags.RemoveTag(FAuraGameplayTags::Get().Abilities_Status_Unlocked);
+			// 	AbilitySpec->DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
+			// }
+		
+		
+			ClientEquipAbility(AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Equipped,SlotInputTag, PrevSlotTag);
+		}
 	}
 	
 	// Spec도 없다 --> 그냥 무시하죠?
+}
+
+void UAuraAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(const FGameplayTag& PassiveTag, bool bActive)
+{
+	ActivatePassiveDelegate.Broadcast(PassiveTag, bActive);
+}
+
+// Spec을 DynamicAbilityTags에서 찾음
+FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecWithSlot(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.DynamicAbilityTags.HasTagExact(Slot))
+		{
+			return &AbilitySpec;
+		}
+	}
+	return nullptr;
+}
+
+// Ability에 InputTag Add
+void UAuraAbilitySystemComponent::AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
+{
+	ClearInputTagBySpec(&Spec);
+	Spec.DynamicAbilityTags.AddTag(Slot);
 }
 
 // AbilityTag로 Ability를 찾아 Description 수정
@@ -127,11 +207,12 @@ bool UAuraAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag
 	return false;
 }
 
-void UAuraAbilitySystemComponent::ClientEquipAbility(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
-	const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag)
+void UAuraAbilitySystemComponent::ClientEquipAbility_Implementation(const FGameplayTag& AbilityTag,
+	const FGameplayTag& StatusTag, const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag)
 {
 	AbilityInfoTagsDelegate.Broadcast(AbilityTag, StatusTag, InputSlotTag, PrevInputSlotTag);
 }
+
 
 void UAuraAbilitySystemComponent::ClientUpdateStatus_Implementation(const FGameplayTag& AbilityTag,
                                                                     const FGameplayTag& StatusTag, int32 Level)
@@ -183,6 +264,15 @@ void UAuraAbilitySystemComponent::ForEachAbility(const FForEachAbility& ForEachD
 	}
 }
 
+bool UAuraAbilitySystemComponent::IsPassiveAbility(const FGameplayAbilitySpec& Spec)
+{
+	const UAbilityInfo* AbilityInfo = UAuraAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+	const FGameplayTag AbilityTag = GetAbilityTagFromSpec(Spec);
+	const FAuraAbilityInfo& Info = AbilityInfo->FindAbilityInfoByTag(AbilityTag);
+	const FGameplayTag AbilityType = Info.AbilityType;
+	return AbilityType.MatchesTagExact(FAuraGameplayTags::Get().Abilities_Type_Passive);
+}
+
 // Ability Info 에서 Ability를 찾고 이미 부여된 Ability라면 무시
 void UAuraAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 {
@@ -209,6 +299,7 @@ void UAuraAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 //이미 부여된 Ability라면 해당 Spec을 반환 
 FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& Tag)
 {
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
@@ -225,11 +316,12 @@ FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromAbilityTag(const F
 // InputTag로 식별
 FGameplayAbilitySpec* UAuraAbilitySystemComponent::GetSpecFromInputTag(const FGameplayTag& InputTag)
 {
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		for (const FGameplayTag& AbilityTag : AbilitySpec.Ability->AbilityTags)
 		{
-			if (AbilityTag.MatchesTag(InputTag))
+			if (AbilityTag.MatchesTagExact(InputTag))
 			{
 				return &AbilitySpec;
 			}
@@ -258,7 +350,6 @@ void UAuraAbilitySystemComponent::ClearInputTagBySpec(FGameplayAbilitySpec* Abil
 	{
 		const FGameplayTag InputTag = GetInputTagFromSpec(*AbilitySpec);
 		AbilitySpec->DynamicAbilityTags.RemoveTag(InputTag);
-		MarkAbilitySpecDirty(*AbilitySpec);
 	}
 }
 
@@ -275,13 +366,19 @@ bool UAuraAbilitySystemComponent::HasInputTag(const FGameplayAbilitySpec& Abilit
 	return false;
 }
 
+// Input Tag를 가지는지 확인  
+bool UAuraAbilitySystemComponent::AbilityHasInputTag(const FGameplayAbilitySpec& AbilitySpec)
+{
+	return AbilitySpec.DynamicAbilityTags.HasTag(FGameplayTag::RequestGameplayTag(FName("InputTag")));
+}
+
 void UAuraAbilitySystemComponent::PlayIfPressed(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid())
 	{
 		return;
 	}
-
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
@@ -311,14 +408,25 @@ FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbi
 // GameplayAbilitySpec을 통해 Ability Tag를 가져옴
 FGameplayTag UAuraAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& Spec)
 {
-	for (FGameplayTag Tag : Spec.Ability.Get()->AbilityTags)
+	if(Spec.Ability)
 	{
-		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Abilities")))
+		for(FGameplayTag Tag: Spec.Ability.Get()->AbilityTags)
 		{
-			return Tag;
+			if(Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			{
+				return Tag;
+			}
 		}
 	}
 	return FGameplayTag();
+	// for (FGameplayTag Tag : Spec.Ability.Get()->AbilityTags)
+	// {
+	// 	if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag("Abilities")))
+	// 	{
+	// 		return Tag;
+	// 	}
+	// }
+	// return FGameplayTag();
 }
 // Spec으로 부터 StatusTag를 반환
 FGameplayTag UAuraAbilitySystemComponent::GetStatusTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
@@ -354,13 +462,26 @@ FGameplayTag UAuraAbilitySystemComponent::GetInputFromAbilityTag(const FGameplay
 	return FGameplayTag();
 }
 
+bool UAuraAbilitySystemComponent::SlotIsEmpty(const FGameplayTag& SlotTag)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (HasInputTag(AbilitySpec, SlotTag))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void UAuraAbilitySystemComponent::PlayIfHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid())
 	{
 		return;
 	}
-
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
@@ -380,7 +501,7 @@ void UAuraAbilitySystemComponent::PlayIfReleased(const FGameplayTag& InputTag)
 	{
 		return;
 	}
-
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag) && AbilitySpec.IsActive())

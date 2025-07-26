@@ -23,6 +23,17 @@ AAuraCharacterBase::AAuraCharacterBase()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
+	
+	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
+	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
+	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	// Debuff Component
 	BurnNiagaraComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>(TEXT("BurnDebuffNiagaraComponent"));
 	BurnNiagaraComponent->SetupAttachment(GetRootComponent());
 	BurnNiagaraComponent->DebuffTag = FAuraGameplayTags::Get().Debuff_Burn;
@@ -31,15 +42,23 @@ AAuraCharacterBase::AAuraCharacterBase()
 	StunNiagaraComponent->SetupAttachment(GetRootComponent());
 	StunNiagaraComponent->DebuffTag = FAuraGameplayTags::Get().Debuff_Stun;
 
-	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon");
-	Weapon->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
-	Weapon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	// Passive Component
+	EffectAttachComponent = CreateDefaultSubobject<USceneComponent>("EffectAttachComponent");
+	EffectAttachComponent->SetupAttachment(GetRootComponent());
 
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	EffectAttachComponent->SetUsingAbsoluteRotation(true);
+	EffectAttachComponent->SetWorldRotation(FRotator::ZeroRotator);
+	
+	HaloNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("HaloNiagaraComponent");
+	HaloNiagaraComponent->SetupAttachment(EffectAttachComponent);
 
-	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
-	GetMesh()->SetGenerateOverlapEvents(true);
+	LifeStealNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("LifeStealNiagaraComponent");
+	LifeStealNiagaraComponent->SetupAttachment(EffectAttachComponent);
+
+	ManaStealNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("ManaStealNiagaraComponent");
+	ManaStealNiagaraComponent->SetupAttachment(EffectAttachComponent);
+	
 }
 
 UAbilitySystemComponent* AAuraCharacterBase::GetAbilitySystemComponent() const 

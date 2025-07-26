@@ -145,7 +145,7 @@ void USpellMenuWidgetController::EquipGlobePressed(const FGameplayTag& SlotInput
 	if (!bWaitingForEquip) return;
 	const FGameplayTag& SelectedAbilityType = AbilityInfo->FindAbilityInfoByTag(SelectedAbility.Ability).AbilityType;
 	if (!SelectedAbilityType.IsValid() || !SelectedAbilityType.MatchesTagExact(AbilityType)) return;
-
+	
 	AuraAbilitySystemComponent->ServerEquipAbility(SlotInputTag, SelectedAbility.Ability);
 }
 
