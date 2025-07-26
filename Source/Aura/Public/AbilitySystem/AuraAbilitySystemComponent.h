@@ -22,7 +22,8 @@ DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FAblityStatusTags, const FGameplayTag&  /*Ability Tag*/, const FGameplayTag& /*Status Tag*/, int32 /*Level*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FAblityInfoTags, const FGameplayTag&  /*Ability Tag*/,
 	const FGameplayTag& /*Status Tag*/, const FGameplayTag&  /*Input Slot Tag*/, const FGameplayTag& /*Prev Input Slot Tag*/);
-
+DECLARE_MULTICAST_DELEGATE_OneParam(FPassiveTag, const FGameplayTag&  /*Passive Ability Tag*/)
+	
 UCLASS()
 class AURA_API UAuraAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -32,6 +33,7 @@ public:
 	FAbilitiesGiven AbilitiesGivenDelegate;
 	FAblityStatusTags AbilityStatusTagsDelegate;
 	FAblityInfoTags AbilityInfoTagsDelegate;
+	FPassiveTag DeactivatePassiveTagDelegate;
 	bool bIsStartUpAbilitiesBroadCasted = false;
 	
 	void AbilityActorInfoSet();
@@ -79,7 +81,7 @@ protected:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateStatus(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 Level);
-
+	
 	
 };
 

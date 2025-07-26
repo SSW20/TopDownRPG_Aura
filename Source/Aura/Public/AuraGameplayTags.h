@@ -99,6 +99,10 @@ public:
 	FGameplayTag Abilities_Type_Passive;
 	FGameplayTag Abilities_Type_None;
 
+	// Passive Ability
+	FGameplayTag Abilities_Passive_HaloOfProtection;
+	FGameplayTag Abilities_Passive_LifeSteal;
+	FGameplayTag Abilities_Passive_ManaSteal;
 	
 	// Meta Attributes
 	FGameplayTag Attributes_Meta_IncomingExp;

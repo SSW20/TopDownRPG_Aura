@@ -257,6 +257,24 @@ void FAuraGameplayTags::InitializeGameplayTags()
 		FString("Type Passive")
 		);
 
+	// Passive Ability
+	
+	GameplayTags.Abilities_Passive_LifeSteal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Abilities.Passive.LifeSteal"),
+			FString("Life Steal")
+			);
+	GameplayTags.Abilities_Passive_ManaSteal = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Abilities.Passive.ManaSteal"),
+			FString("Mana Steal")
+			);
+	GameplayTags.Abilities_Passive_HaloOfProtection = UGameplayTagsManager::Get().AddNativeGameplayTag(
+			FName("Abilities.Passive.HaloOfProtection"),
+			FString("Halo Of Protection")
+			);
+	
+
+
+	
 	
 	// Cooldown
 	GameplayTags.Cooldown_Fire_FireBolt = UGameplayTagsManager::Get().AddNativeGameplayTag(
