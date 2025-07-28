@@ -35,7 +35,19 @@ void UAuraDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 }
 
 // FDamageEffectParams의 내용을 모두 채워서 반환
-FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDefaults(AActor* TargetActor, FVector InRadialDamageOrigin) const
+
+//	AActor* TargetActor,					// 피해를 받을 대상 액터
+// 	FVector InRadialDamageOrigin,			// 방사형 피해의 원점 (중심 위치)
+// 	bool bOverrideKnockbackDirection,		// 넉백 방향을 수동으로 오버라이드할지 여부
+// 	FVector KnockbackDirectionOverride,		// 넉백 방향을 오버라이드할 경우 사용할 벡터
+// 	bool bOverrideDeathImpulse,				// 사망 임펄스 방향을 수동으로 오버라이드할지 여부
+// 	FVector DeathImpulseDirectionOverride,	// 사망 임펄스 방향을 오버라이드할 경우 사용할 벡터
+// 	bool bOverridePitch,					// 넉백/사망 임펄스의 피치(수직 각도)를 오버라이드할지 여부
+// 	float PitchOverride						// 피치를 오버라이드할 경우 사용할 값
+
+FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDefaults(AActor* TargetActor,
+	FVector InRadialDamageOrigin, bool bOverrideKnockbackDirection, FVector KnockbackDirectionOverride,
+	bool bOverrideDeathImpulse, FVector DeathImpulseDirectionOverride, bool bOverridePitch, float PitchOverride) const
 {
 	FDamageEffectParams DamageEffectParams;
 	DamageEffectParams.WorldContextObject = GetAvatarActorFromActorInfo();
@@ -56,16 +68,54 @@ FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDe
 	DamageEffectParams.DeathImpulseMagnitude = DeathImpulseMagnitude;
 	DamageEffectParams.KnockbackMagnitude = KnockbackMagnitude;
 	DamageEffectParams.KnockbackChance = KnockbackChance;
-
+	
 	if (IsValid(TargetActor))
 	{
 		FRotator Rotation = (TargetActor->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation()).Rotation();
-		Rotation.Pitch = 45.f;
+		if (bOverridePitch)
+		{
+			Rotation.Pitch = PitchOverride;
+		}
 		const FVector ToTarget = Rotation.Vector();
-		DamageEffectParams.DeathImpulseVector = ToTarget * DeathImpulseMagnitude;
-		DamageEffectParams.KnockbackImpulseVector = ToTarget * KnockbackMagnitude;
+
+		// 넉백을 오버라이드 하지 않을 시 
+		if (!bOverrideKnockbackDirection)
+		{
+			DamageEffectParams.KnockbackImpulseVector = ToTarget * KnockbackMagnitude;
+		}
+
+		// 죽었을 때의 넉백을 오버라이드 하지 않을 시 
+		if (!bOverrideDeathImpulse)
+		{
+			DamageEffectParams.DeathImpulseVector = ToTarget * DeathImpulseMagnitude;
+		}
 	}
 	
+	// 만약 넉백 방향을 오버라이드 한다면 ? 
+	if (bOverrideKnockbackDirection)
+	{
+		KnockbackDirectionOverride.Normalize();
+		DamageEffectParams.KnockbackImpulseVector = KnockbackDirectionOverride * KnockbackMagnitude;
+		if (bOverridePitch)
+		{
+			FRotator KnockbackRotation = KnockbackDirectionOverride.Rotation();
+			KnockbackRotation.Pitch = PitchOverride;
+			DamageEffectParams.KnockbackImpulseVector = KnockbackRotation.Vector() * KnockbackMagnitude;
+		}
+	}
+
+	// 만약 죽었을 시의 넉백을 오버라이드 한다면?
+	if (bOverrideDeathImpulse)
+	{
+		DeathImpulseDirectionOverride.Normalize();
+		DamageEffectParams.DeathImpulseVector = DeathImpulseDirectionOverride * DeathImpulseMagnitude;
+		if (bOverridePitch)
+		{
+			FRotator DeathImpulseRotation = DeathImpulseDirectionOverride.Rotation();
+			DeathImpulseRotation.Pitch = PitchOverride;
+			DamageEffectParams.DeathImpulseVector = DeathImpulseRotation.Vector() * DeathImpulseMagnitude;
+		}
+	}
 	if (bIsRadialDamage)
 	{
 		DamageEffectParams.bIsRadialDamage = bIsRadialDamage;

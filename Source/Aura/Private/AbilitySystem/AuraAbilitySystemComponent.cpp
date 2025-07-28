@@ -198,7 +198,6 @@ bool UAuraAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag
 	if (AbilityTag.IsValid())
 	{
 		OutDescription = UAuraGameplayAbility::GetLockedDescription(AbilityInfo->FindAbilityInfoByTag(AbilityTag).LevelRequired);
-
 	}
 	else
 	{
