@@ -133,6 +133,14 @@ void AAuraCharacterBase::ApplyEffectToSelfInit(TSubclassOf<UGameplayEffect> Effe
 	
 }
 
+float AAuraCharacterBase::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	float Damage =  Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	OnDamageDelegate.Broadcast(Damage);
+	return Damage;
+}
+
 bool AAuraCharacterBase::IsDead_Implementation() const
 {
 	return bDead;
@@ -257,6 +265,11 @@ void AAuraCharacterBase::SetIsShocking_Implementation(bool IsShocking)
 bool AAuraCharacterBase::IsShocking_Implementation() const
 {
 	return bIsShocking;
+}
+
+FOnDamageSignature& AAuraCharacterBase::GetOnDamageSignature()
+{
+	return OnDamageDelegate;
 }
 
 FOnDeathSignature& AAuraCharacterBase::GetOnDeathDelegate()

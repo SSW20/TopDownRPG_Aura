@@ -7,6 +7,7 @@
 #include "Input/AuraInputConfig.h"
 #include "GameplayTagContainer.h"
 #include "NiagaraSystem.h"
+#include "Actor/MagicCircle.h"
 #include "AuraPlayerController.generated.h"
 
 class UFloatingDamageText;
@@ -35,6 +36,12 @@ public:
 //* (데미지 숫자는 중요한 피드백이므로 누락되어서는 안 됩니다.)
 	UFUNCTION(Client, Reliable)
 	void ShowDamageNumber(float Damage, ACharacter* TargetCharacter, bool bIsBlocked, bool bIsCritHit);
+
+	UFUNCTION(BlueprintCallable)
+	void ShowMagicCircle(UMaterialInterface* Material = nullptr);
+
+	UFUNCTION(BlueprintCallable)
+	void HideMagicCircle();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -50,6 +57,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ShiftAction;
+	
+	void MagicCircleTrace();
 
 	bool bIsShiftPressed = false;
 
@@ -84,6 +93,7 @@ private:
 		TObjectPtr<class USplineComponent> Spline: 경로를 부드럽게 만들 스플라인 컴포넌트 포인터.
 	*/
 
+	FHitResult CursorHit;
 	FVector CachedDestination = FVector::Zero();
 	float FollowTime = 0.f;
 	float ShortPressThreshold = 0.5f;
@@ -100,4 +110,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UNiagaraSystem> ClickNiagaraSystem;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AMagicCircle> MagicCircleDecalClass;
+	
+	UPROPERTY()
+	TObjectPtr<AMagicCircle> MagicCircle;
 };

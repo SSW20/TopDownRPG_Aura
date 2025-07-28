@@ -63,4 +63,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	int32 GetSkillPoint() const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ShowMagicCircle(UMaterialInterface* Material = nullptr);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void HideMagicCircle();
 };

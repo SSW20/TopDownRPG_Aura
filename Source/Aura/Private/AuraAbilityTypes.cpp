@@ -71,12 +71,29 @@ bool FAuraGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 		{
 			RepBits |= 1 << 15;
 		}
+		if (bIsRadialDamage)
+		{
+			RepBits |= 1 << 16;
+			
+			if (InnerRadialDamage > 0.f)
+			{
+				RepBits |= 1 << 17;
+			}
+			if (OuterRadialDamage > 0.f)
+			{
+				RepBits |= 1 << 18;
+			}
+			if (RadialOrigin != FVector::ZeroVector)
+			{
+				RepBits |= 1 << 19;
+			}
+		}
 	}
 
 
 	//	RepBits를 네트워크로 전송.
 	//  받는 쪽(Loading 모드)에서 이 지도를 먼저 읽어 어떤 데이터가 뒤따라올지 알 수 있음.
-	Ar.SerializeBits(&RepBits, 16);
+	Ar.SerializeBits(&RepBits, 20);
 
 	
 	// 역 직렬화란 ?
@@ -166,6 +183,23 @@ bool FAuraGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 	if (RepBits & (1 << 15))
 	{
 		KnockbackImpulseVector.NetSerialize(Ar, Map, bOutSuccess);
+	}
+	if (RepBits & (1 << 16))
+	{
+		Ar << bIsRadialDamage;
+		
+		if (RepBits & (1 << 17))
+		{
+			Ar << InnerRadialDamage;
+		}
+		if (RepBits & (1 << 18))
+		{
+			Ar << OuterRadialDamage;
+		}
+		if (RepBits & (1 << 19))
+		{
+			RadialOrigin.NetSerialize(Ar, Map, bOutSuccess);
+		}
 	}
 
 

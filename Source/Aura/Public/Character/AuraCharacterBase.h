@@ -21,7 +21,7 @@ class UGameplayEffect;
 UCLASS(Abstract)
 class AURA_API AAuraCharacterBase : public ACharacter, public IAbilitySystemInterface,  public ICombatInterface
 {
-	GENERATED_BODY()
+	GENERATED_BODY() 
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -51,6 +51,7 @@ public:
 	virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
 	virtual void SetIsShocking_Implementation(bool IsShocking) override;
 	virtual bool IsShocking_Implementation() const override;
+	virtual FOnDamageSignature& GetOnDamageSignature() override;
 	/* End Combat Interface */
 
 	UPROPERTY(ReplicatedUsing=OnRep_Stunned, BlueprintReadOnly)
@@ -152,9 +153,10 @@ protected:
 
 	// ASC Delegate
 	FOnASCRegistered ASCRegisteredDelegate;
-
 	
 	FOnDeathSignature OnDeathDelegate;
+
+	FOnDamageSignature OnDamageDelegate;
 
 	// Debuff Niagara Component
 	UPROPERTY(VisibleAnywhere)
@@ -175,6 +177,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> EffectAttachComponent;
+
+	// Take Damage Override
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };
 
 inline void AAuraCharacterBase::OnRep_Stunned()

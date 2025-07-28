@@ -236,5 +236,21 @@ int32 AAuraCharacter::GetAttributePoint_Implementation() const
 	return AuraPlayerState->GetAttributePoint();
 }
 
+void AAuraCharacter::ShowMagicCircle_Implementation(UMaterialInterface* Material)
+{
+	if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
+	{
+		AuraPlayerController->ShowMagicCircle(Material);
+	}
+}
+
+void AAuraCharacter::HideMagicCircle_Implementation()
+{
+	if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
+	{
+		AuraPlayerController->HideMagicCircle();
+	}
+}
+
 
 

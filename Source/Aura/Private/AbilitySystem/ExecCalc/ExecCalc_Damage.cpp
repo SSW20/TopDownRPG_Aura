@@ -7,6 +7,8 @@
 #include "AbilitySystemComponent.h"
 #include "AuraGameplayTags.h"
 #include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
+#include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
 
 
 UExecCalc_Damage::UExecCalc_Damage()
@@ -48,7 +50,7 @@ void UExecCalc_Damage::DetermineDebuff(const FGameplayEffectCustomExecutionParam
 			                                                           EvaluateParams, TargetDebufResistance);
 			
 			const float EffectiveDebuffChance = DebufChance * (100 - TargetDebufResistance) / 100.f;
-			const bool bDebuff = FMath::RandRange(0, 100) <= EffectiveDebuffChance;
+			const bool bDebuff = FMath::RandRange(0, 100) < EffectiveDebuffChance;
 			if (bDebuff)
 			{
 				// 이제 디버프 걸렸음 뭐함?
@@ -130,7 +132,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	float Damage = 0.f;
 	// 데미지 타입 Tag - 데미지 저항 Tag Map 과 Tag - TagDef Map 을 통해 실제 저항 값을 가져옴
 	for (const TPair<FGameplayTag, FGameplayTag> Pair : FAuraGameplayTags::Get().DamageTypesToResistances)
-	{ 
+	{
 		const FGameplayTag DamageTypeTag = Pair.Key;
 		const FGameplayTag ResistanceTag = Pair.Value;
 
@@ -142,8 +144,39 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
 
 		float TargetDamage = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false);
+		if (TargetDamage <= 0.f) continue;
 		TargetDamage *= (100.f - TargetResistance) / 100.f;
-
+		
+		// 여기서 방사형 데미지인 지아닌지에 대한 확인 후 변경
+		if (UAuraAbilitySystemLibrary::IsRadialDamage(EffectContextHandle))
+		{
+			// 1. ExecCalc에서 방사형 피해를 적용해야 한다고 판단
+			// 2. 피해 대상의 TakeDamage 함수가 호출될 때 최종 피해량을 브로드캐스트할 수 있도록 TakeDamage를 오버라이드하고 델리게이트를 설정
+			// 3. ExecCalc는 피해 대상의 이 델리게이트에 람다 함수를 바인드. 이 람다는 델리게이트가 브로드캐스트하는 최종 피해량을 ExecCalc의 DamageTypeValue에 다시 할당하는 역할
+			if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(TargetActor))
+			{
+				CombatInterface->GetOnDamageSignature().AddLambda([&](float NewDamage)
+				{
+					TargetDamage = NewDamage;
+				});
+			}
+			// 4. ExecCalc는 UGameplayStatics::ApplyRadialDamageWithFalloff를 호출하여 실제 방사형 피해를 적용. 이 호출은 내부적으로 피해 대상의 TakeDamage를 호출
+			// 5. 피해 대상의 TakeDamage가 실행되고 최종 피해량을 브로드캐스트하면, 3단계에서 바인딩된 람다가 실행되어 ExecCalc의 DamageTypeValue가 최종 감쇠된 피해량으로 업데이트
+			// 바인드하고 호출하면 바인드된 함수가 호출되는 기적의 구조 --> 뫼비우스임?
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				TargetActor,
+				TargetDamage,
+				0.f,
+				UAuraAbilitySystemLibrary::GetRadialDamageOrigin(EffectContextHandle),
+				UAuraAbilitySystemLibrary::GetRadialDamageInnerRadius(EffectContextHandle),
+				UAuraAbilitySystemLibrary::GetRadialDamageOuterRadius(EffectContextHandle),
+				1.f,
+				UDamageType::StaticClass(),
+				TArray<AActor*>(),
+				SourceActor,
+				nullptr
+				);
+		}
 		Damage += TargetDamage;
 	}
 

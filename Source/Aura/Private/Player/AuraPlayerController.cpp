@@ -13,6 +13,7 @@
 #include "NavigationPath.h"
 #include "AuraGameplayTags.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/DecalComponent.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/FloatingDamageText.h"
 
@@ -28,6 +29,7 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 
 	CursorTrace();
 	AutoRun();
+	MagicCircleTrace();
 }
 
 void AAuraPlayerController::ShowDamageNumber_Implementation(float Damage, ACharacter* TargetCharacter, bool bIsBlocked, bool bIsCritHit)
@@ -56,7 +58,7 @@ void AAuraPlayerController::CursorTrace()
 		ThisActor = nullptr;
 		return;
 	}
-	FHitResult CursorHit;
+	
 	GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, CursorHit);
 
 	LastActor = ThisActor;
@@ -128,8 +130,8 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	{
 		bTargeting = ThisActor ? true : false;
 		bAutoRunning = false;
-		if (GetASC()) GetASC()->PlayIfPressed(InputTag);
 	}
+	if (GetASC()) GetASC()->PlayIfPressed(InputTag);
 }
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
@@ -286,6 +288,36 @@ void AAuraPlayerController::SetupInputComponent()
 	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AAuraPlayerController::ShiftReleased);
 }
 
+void AAuraPlayerController::ShowMagicCircle(UMaterialInterface* Material)
+{
+	if (!IsValid(MagicCircle))
+	{
+		MagicCircle = Cast<AMagicCircle>(GetWorld()->SpawnActor(MagicCircleDecalClass));
+		if (Material != nullptr)
+		{
+			MagicCircle->DecalComponent->SetMaterial(0,Material);
+			bShowMouseCursor = false;
+		}
+	}
+}
+
+void AAuraPlayerController::HideMagicCircle()
+{
+	if (IsValid(MagicCircle))
+	{
+		MagicCircle->Destroy();
+		bShowMouseCursor = true;
+	}
+}
+
+void AAuraPlayerController::MagicCircleTrace()
+{
+	if (IsValid(MagicCircle))
+	{
+		MagicCircle->SetActorLocation(CursorHit.ImpactPoint);
+	}
+}
+
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
@@ -318,4 +350,5 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 
 
 }
+
 

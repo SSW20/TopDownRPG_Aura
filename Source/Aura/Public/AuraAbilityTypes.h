@@ -58,6 +58,19 @@ struct FDamageEffectParams
 	
 	UPROPERTY(BlueprintReadWrite)
 	FVector KnockbackImpulseVector = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsRadialDamage = false;
+
+	UPROPERTY(BlueprintReadWrite)
+	float InnerRadialDamage = 0.f;
+	
+	UPROPERTY(BlueprintReadWrite)
+	float OuterRadialDamage = 0.f;
+
+	UPROPERTY(BlueprintReadWrite)
+	FVector RadialOrigin = FVector::ZeroVector;
+
 };
 USTRUCT(BlueprintType)
 struct FAuraGameplayEffectContext : public FGameplayEffectContext
@@ -73,7 +86,10 @@ public:
 	TSharedPtr<FGameplayTag> GetDamageTypeTag() const { return DamageTypeTag; }
 	FVector GetDeathImpulseVector() const {return DeathImpulseVector; }
 	FVector GetKnockbackImpulseVector() const {return KnockbackImpulseVector; }
-	
+	bool GetIsRadialDamage() const { return bIsRadialDamage; }
+	float GetInnerRadialDamage() const { return InnerRadialDamage; }
+	float GetOuterRadialDamage() const { return OuterRadialDamage; }
+	FVector GetRadialOrigin() const { return RadialOrigin; }
 	
 	void SetIsCriticalHit(bool bNewVal) { bIsCriticalHit = bNewVal; }
 	void SetIsBlocked(bool bNewVal) { bIsBlocked = bNewVal; }
@@ -84,6 +100,10 @@ public:
 	void SetDamageType(TSharedPtr<FGameplayTag> InDamageType) { DamageTypeTag = InDamageType; }
 	void SetDeathImpulseVector(const FVector& Vector){DeathImpulseVector = Vector;}
 	void SetKnockbackImpulseVector(const FVector& Vector){KnockbackImpulseVector = Vector;}
+	void SetIsRadialDamage(bool bNewVal) { bIsRadialDamage = bNewVal; }
+	void SetInnerRadialDamage(float InDamage) {InnerRadialDamage = InDamage; }
+	void SetOuterRadialDamage(float InDamage) {OuterRadialDamage = InDamage; }
+	void SetRadialOrigin(const FVector& Vector){RadialOrigin = Vector;}
 	
 	// 리플렉션 시스템용 UScriptStruct 반환 
 	// 언리얼 엔진이 런타임에 USTRUCT 객체의 정확한 실제 타입을 질의하고 확인할 수 있도록 하는 핵심적인 메커니즘
@@ -138,6 +158,18 @@ protected:
 
 	UPROPERTY()
 	FVector KnockbackImpulseVector = FVector::ZeroVector;
+
+	UPROPERTY()
+	bool bIsRadialDamage = false;
+
+	UPROPERTY()
+	float InnerRadialDamage = 0.f;
+	
+	UPROPERTY()
+	float OuterRadialDamage = 0.f;
+
+	UPROPERTY()
+	FVector RadialOrigin = FVector::ZeroVector;
 };
 
 // 커스텀 FGameplayEffectContext 구조체를 네트워크 복제 및 복사 가능하도록 완벽하게 설정하기 위해 필요

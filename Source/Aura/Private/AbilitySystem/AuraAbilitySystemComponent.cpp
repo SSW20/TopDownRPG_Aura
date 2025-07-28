@@ -537,3 +537,5 @@ void UAuraAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FG
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), Tag, Payload);
 }
+
+

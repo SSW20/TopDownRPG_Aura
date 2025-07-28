@@ -35,7 +35,7 @@ void UAuraDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 }
 
 // FDamageEffectParams의 내용을 모두 채워서 반환
-FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDefaults(AActor* TargetActor) const
+FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDefaults(AActor* TargetActor, FVector InRadialDamageOrigin) const
 {
 	FDamageEffectParams DamageEffectParams;
 	DamageEffectParams.WorldContextObject = GetAvatarActorFromActorInfo();
@@ -56,6 +56,23 @@ FDamageEffectParams UAuraDamageGameplayAbility::MakeDamgeEffectParamsFromClassDe
 	DamageEffectParams.DeathImpulseMagnitude = DeathImpulseMagnitude;
 	DamageEffectParams.KnockbackMagnitude = KnockbackMagnitude;
 	DamageEffectParams.KnockbackChance = KnockbackChance;
+
+	if (IsValid(TargetActor))
+	{
+		FRotator Rotation = (TargetActor->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation()).Rotation();
+		Rotation.Pitch = 45.f;
+		const FVector ToTarget = Rotation.Vector();
+		DamageEffectParams.DeathImpulseVector = ToTarget * DeathImpulseMagnitude;
+		DamageEffectParams.KnockbackImpulseVector = ToTarget * KnockbackMagnitude;
+	}
+	
+	if (bIsRadialDamage)
+	{
+		DamageEffectParams.bIsRadialDamage = bIsRadialDamage;
+		DamageEffectParams.RadialOrigin = InRadialDamageOrigin;;
+		DamageEffectParams.InnerRadialDamage = InnerRadialDamage;
+		DamageEffectParams.OuterRadialDamage = OuterRadialDamage;
+	}
 	
 	return DamageEffectParams;
 	

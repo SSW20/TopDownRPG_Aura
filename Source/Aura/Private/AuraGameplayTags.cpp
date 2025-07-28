@@ -217,6 +217,11 @@ void FAuraGameplayTags::InitializeGameplayTags()
 	FString("Attack Ability")
 	);
 
+	GameplayTags.Abilities_Arcane_ArcaneShard = UGameplayTagsManager::Get().AddNativeGameplayTag(
+	FName("Abilities.Arcane.ArcaneShard"),
+	FString("Attack Ability")
+	);
+
 	GameplayTags.Abilities_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(
 		FName("Abilities.HitReact"),
 		FString("Hit React Ability")

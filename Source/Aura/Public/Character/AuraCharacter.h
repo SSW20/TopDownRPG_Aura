@@ -37,6 +37,8 @@ public:
 	virtual void AddSkillPoint_Implementation(int32 Point) override;
 	virtual int32 GetSkillPoint_Implementation() const override;
 	virtual int32 GetAttributePoint_Implementation() const override;
+	virtual void ShowMagicCircle_Implementation(UMaterialInterface* Material = nullptr) override;
+	virtual void HideMagicCircle_Implementation() override;
 	/*	End Player Interface */
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
