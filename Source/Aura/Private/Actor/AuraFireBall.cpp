@@ -16,6 +16,11 @@ AAuraFireBall::AAuraFireBall()
 // Called when the game starts or when spawned
 void AAuraFireBall::BeginPlay()
 {
+	if (Sphere == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AAuraFireBall::BeginPlay - Sphere component is nullptr!"));
+		return; // Or handle the error appropriately
+	}
 	Super::BeginPlay();
 	StartOutgoingTimeline();
 }

@@ -296,7 +296,7 @@ TArray<FRotator> UAuraAbilitySystemLibrary::GetEvenlySpreadRotators(const FVecto
 	{
 		const FVector SpreadL = Forward.RotateAngleAxis(-Spread / 2.f, Axis);
 		// 양쪽으로 퍼질 수 있게
-		const float DeltaSpread = Spread / (ProjectileCount - 1);
+		const float DeltaSpread = Spread < 360.0f ? Spread / (ProjectileCount - 1) : 360.0f / ProjectileCount;
 		for (int i = 0; i < ProjectileCount; i++)
 		{
 			const FVector Direction = SpreadL.RotateAngleAxis(i * DeltaSpread, Axis);

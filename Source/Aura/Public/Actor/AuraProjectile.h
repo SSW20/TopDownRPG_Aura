@@ -8,11 +8,12 @@
 #include "Sound/SoundBase.h"
 #include "NiagaraSystem.h"
 #include "Components/AudioComponent.h"
-#include "GameplayEffectTypes.h"
+#include "EngineMinimal.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "AuraProjectile.generated.h"
 class UNiagaraSystem;
 class USphereComponent;
-class UProjectileMovementComponent;
+
 
 UCLASS()
 class AURA_API AAuraProjectile : public AActor
@@ -23,14 +24,18 @@ public:
 	// Sets default values for this actor's properties
 	AAuraProjectile();
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UProjectileMovementComponent> ProjectileMovement;
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 	FDamageEffectParams DamageEffectParams;
 	UPROPERTY()
 	TObjectPtr<USceneComponent> HomingTargetSceneComponent;
 	virtual bool IsValidOverlap(AActor* OtherActor);
+
+	
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USphereComponent> Sphere;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -38,13 +43,12 @@ protected:
 	void OnHit();
 	virtual void Destroyed() override;
 	
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> Sphere;
+	
 	/*
 	*	OverlappedComponent: 이벤트를 발생시킨 컴포넌트(현재 객체의 컴포넌트).
 		OtherActor: 충돌한 다른 액터.
 		OtherComp: OtherActor에서의 충돌한 컴포넌트.
-		OtherBodyIndex: 충돌한 다른 액터의 본체 인덱스 (본체가 여러 개인 경우).
+		OtherBodyIndex: 충돌한 다른 액터의 본체 인덱스 (본체가 여러 개인 경우k).
 		bFromSweep: 스위프트 충돌 여부 (충돌을 스위프트로 검출했는지 여부).
 		SweepResult: 충돌 정보를 제공하는 FHitResult 구조체.
 	*/

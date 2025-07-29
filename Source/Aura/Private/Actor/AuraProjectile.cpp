@@ -7,7 +7,6 @@
 #include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "AbilitySystemComponent.h"
-#include "GameplayEffect.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "Aura/Aura.h"
@@ -16,16 +15,17 @@ AAuraProjectile::AAuraProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	bReplicates = true; // 투사체 복제 활성화
-	
-	Sphere = CreateDefaultSubobject<USphereComponent>("Projectile Sphere");
+	bReplicates = true;
+
+	Sphere = CreateDefaultSubobject<USphereComponent>("Sphere");
 	SetRootComponent(Sphere);
-	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); 
+	Sphere->SetCollisionObjectType(ECC_Projectile);
+	Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Sphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	Sphere->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	Sphere->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
 	Sphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	Sphere->SetCollisionObjectType(ECC_Projectile);
+
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>("Projectile Movement");
 	ProjectileMovement->InitialSpeed = 550.f;
@@ -38,6 +38,7 @@ void AAuraProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	SetReplicateMovement(true);
+	SetLifeSpan(LifeSpan);
 	if (Sphere == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AAuraProjectile::BeginPlay - Sphere component is nullptr!"));
@@ -46,10 +47,7 @@ void AAuraProjectile::BeginPlay()
 	//OnComponentBeginOverlap << Signature
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AAuraProjectile::OnSphereOverlap);
 	LoopSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopSound, GetRootComponent());
-	SetLifeSpan(LifeSpan);
 }
-
-
 /*
 	서버에서 Destroy를 호출하면 클라에게 Rep되어 보내져 호출됨 
 	클라에서는 OnSphereOverlap이 먼저냐 Rep된 Destroy가 먼저 호출되냐 
