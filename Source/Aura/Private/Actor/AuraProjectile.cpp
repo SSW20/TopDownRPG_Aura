@@ -38,7 +38,11 @@ void AAuraProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	SetReplicateMovement(true);
-
+	if (Sphere == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AAuraProjectile::BeginPlay - Sphere component is nullptr!"));
+		return; // Or handle the error appropriately
+	}
 	//OnComponentBeginOverlap << Signature
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AAuraProjectile::OnSphereOverlap);
 	LoopSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopSound, GetRootComponent());
@@ -78,16 +82,21 @@ void AAuraProjectile::Destroyed()
 	Super::Destroyed();
 }
 
-void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+bool AAuraProjectile::IsValidOverlap(AActor* OtherActor)
 {
-	if (DamageEffectParams.SourceAbilitySystemComponent == nullptr) return;
+	if (DamageEffectParams.SourceAbilitySystemComponent == nullptr) return false;
 	
 	//투사체가 발사자(주인) 자신을 때리는 경우를 방지, 
 	//만약 코드가 없었다면 자신을 맞추고 Destroy --> 다른 액터를 맞춰도 이미 사라진 상태임
 	AActor* SourceActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
-	if (SourceActor == OtherActor) return;
-	if (UAuraAbilitySystemLibrary::IsFriend(SourceActor,OtherActor)) return;
-	
+	if (SourceActor == OtherActor) return false;
+	if (UAuraAbilitySystemLibrary::IsFriend(SourceActor,OtherActor)) return false;
+	return true;
+}
+
+void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!IsValidOverlap(OtherActor)) return;
 	//이 충돌에 대한 효과가 아직 재생되지 않았다면
     //클라이언트가 충돌을 예측하여 효과를 먼저 재생하는 시나리오
 	if (!bIsPlaying) OnHit();

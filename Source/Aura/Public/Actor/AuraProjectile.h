@@ -10,7 +10,9 @@
 #include "Components/AudioComponent.h"
 #include "GameplayEffectTypes.h"
 #include "AuraProjectile.generated.h"
-
+class UNiagaraSystem;
+class USphereComponent;
+class UProjectileMovementComponent;
 
 UCLASS()
 class AURA_API AAuraProjectile : public AActor
@@ -27,15 +29,17 @@ public:
 	FDamageEffectParams DamageEffectParams;
 	UPROPERTY()
 	TObjectPtr<USceneComponent> HomingTargetSceneComponent;
+	virtual bool IsValidOverlap(AActor* OtherActor);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
 	void OnHit();
 	virtual void Destroyed() override;
 	
-private:
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class USphereComponent> Sphere;
+	TObjectPtr<USphereComponent> Sphere;
 	/*
 	*	OverlappedComponent: 이벤트를 발생시킨 컴포넌트(현재 객체의 컴포넌트).
 		OtherActor: 충돌한 다른 액터.
@@ -45,7 +49,7 @@ private:
 		SweepResult: 충돌 정보를 제공하는 FHitResult 구조체.
 	*/
 	UFUNCTION()
-	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex,
@@ -64,7 +68,5 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float LifeSpan = 10.f;
-
-
-
+	
 };
