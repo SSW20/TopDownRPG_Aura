@@ -10,6 +10,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "Aura/Aura.h"
+
+
 // Sets default values
 AAuraProjectile::AAuraProjectile()
 {
@@ -38,7 +40,7 @@ void AAuraProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	SetReplicateMovement(true);
-	SetLifeSpan(LifeSpan);
+	
 	if (Sphere == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AAuraProjectile::BeginPlay - Sphere component is nullptr!"));

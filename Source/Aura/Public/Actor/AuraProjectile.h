@@ -23,8 +23,8 @@ class AURA_API AAuraProjectile : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AAuraProjectile();
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UProjectileMovementComponent* ProjectileMovement;
 
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 	FDamageEffectParams DamageEffectParams;
@@ -34,7 +34,7 @@ public:
 
 	
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	TObjectPtr<USphereComponent> Sphere;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

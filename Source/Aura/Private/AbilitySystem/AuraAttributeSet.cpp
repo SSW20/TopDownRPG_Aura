@@ -280,7 +280,7 @@ void UAuraAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 	bool bIsDead = false;
 
 	SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
-
+	UE_LOG(LogTemp, Display, TEXT("Incoming Damage: %f"), NewHealth);
 	if (NewHealth <= 0)
 		bIsDead = true;
 		

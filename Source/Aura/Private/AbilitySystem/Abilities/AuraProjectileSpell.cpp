@@ -28,8 +28,6 @@ void UAuraProjectileSpell::SpawnProjectileInBluePrint(const FVector& TargetLocat
                                                       const float Pitch)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority()) return;
-
-
 	FTransform SpawnTransform;
 	//BlueprintNativeEvent 인터페이스 함수 호출 시 첫 번째 인자는 '인터페이스를 구현하는 객체
 	FVector SpawnLocation = ICombatInterface::Execute_GetCombatSocketLocation(
