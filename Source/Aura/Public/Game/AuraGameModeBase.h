@@ -6,7 +6,9 @@
 #include "GameFramework/GameModeBase.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "UI/ViewModel/MVVM_LoadSlot.h"
 #include "AuraGameModeBase.generated.h"
+class USaveGame;
 /**
  * 
  */
@@ -19,5 +21,11 @@ public:
 	TObjectPtr<UCharacterClassInfo> CharacterInfoClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability Info")
-	TObjectPtr<UAbilityInfo> AbilityInfo; 
+	TObjectPtr<UAbilityInfo> AbilityInfo;
+
+	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Save Data")
+	TSubclassOf<USaveGame> LoadScreenSaveGameClass;
+
 };
