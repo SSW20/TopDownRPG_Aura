@@ -3,8 +3,12 @@
 
 #include "Game/AuraGameModeBase.h"
 
+#include "Game/AuraGameInstance.h"
 #include "Game/LoadScreenSaveGame.h"
+#include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
+
+class UAuraGameInstance;
 
 void AAuraGameModeBase::SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex)
 {
@@ -51,8 +55,56 @@ void AAuraGameModeBase::TravelMap(UMVVM_LoadSlot* LoadSlot)
 	UGameplayStatics::OpenLevelBySoftObjectPtr(LoadSlot, Maps.FindChecked(LoadSlot->GetMapName()));
 }
 
+AActor* AAuraGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+{
+	UAuraGameInstance* AuraGameInstance = Cast<UAuraGameInstance>(GetGameInstance());
+	TArray<AActor*> FoundActors;
+	
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(),APlayerStart::StaticClass(), FoundActors);
+	
+	if (FoundActors.Num() > 0)
+	{
+		AActor* SelectedActor = FoundActors[0];
+		for (AActor* Actor : FoundActors)
+		{
+			if (APlayerStart* PlayerStart = Cast<APlayerStart>(Actor))
+			{
+				if (PlayerStart->PlayerStartTag == AuraGameInstance->PlayerStartTag)
+				{
+					SelectedActor = Actor;
+					break;
+				}
+			}
+		}
+		return SelectedActor;
+	}
+	return nullptr;
+}
+
 void AAuraGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 	Maps.Add(DefaultMapName, DefaultMap);
+}
+
+// GameInstance에 해당하는 ULoadScreenSaveGame* 타입의 SaveSlot Data를 넘겨줌
+ULoadScreenSaveGame* AAuraGameModeBase::RetrieveInGameSaveData()
+{
+	UAuraGameInstance* AuraGameInstance = Cast<UAuraGameInstance>(GetGameInstance());
+
+	const FString InGameLoadSlotName = AuraGameInstance->LoadSlotName;
+	const int32 InGameLoadSlotIndex = AuraGameInstance->LoadSlotIndex;
+
+	return GetSaveSlotData(InGameLoadSlotName, InGameLoadSlotIndex);
+}
+
+void AAuraGameModeBase::SaveInGameProgressData(ULoadScreenSaveGame* SaveObject)
+{
+	UAuraGameInstance* AuraGameInstance = Cast<UAuraGameInstance>(GetGameInstance());
+
+	const FString InGameLoadSlotName = AuraGameInstance->LoadSlotName;
+	const int32 InGameLoadSlotIndex = AuraGameInstance->LoadSlotIndex;
+	AuraGameInstance->PlayerStartTag = SaveObject->PlayerStartTag;
+
+	UGameplayStatics::SaveGameToSlot(SaveObject, InGameLoadSlotName, InGameLoadSlotIndex);
 }

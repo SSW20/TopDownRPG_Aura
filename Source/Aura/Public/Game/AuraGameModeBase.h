@@ -28,6 +28,8 @@ public:
 	void DeleteSlot(const FString& SlotName, int32 SlotIndex);
 	void TravelMap(UMVVM_LoadSlot* LoadSlot);
 	
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Save Data")
 	TSubclassOf<USaveGame> LoadScreenSaveGameClass;
 	
@@ -40,6 +42,13 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FString, TSoftObjectPtr<UWorld>> Maps;
 
+	UPROPERTY(EditDefaultsOnly)
+	FName DefaultPlayerStart;
+
+	ULoadScreenSaveGame* RetrieveInGameSaveData();
+	void SaveInGameProgressData(ULoadScreenSaveGame* SaveObject);
+	
 protected:
 	virtual void BeginPlay() override;
+
 };

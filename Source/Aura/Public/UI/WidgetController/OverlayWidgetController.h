@@ -32,6 +32,7 @@ struct FAuraAbilityInfo;
 
 //동적 멀티캐스트 델레게이트, 파라미터는 1개
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChanged, int32, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerLevelChanged, int32, NewValue, bool, bIsLevelUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUIWidgetSignature, FUIWidgetRow, Row);
 
@@ -64,7 +65,7 @@ public:
 	FOnAttributeChangedSignature ExpChangeDelegate;
 
 	UPROPERTY(BlueprintAssignable, Category="Stat")
-	FOnPlayerStatChanged LevelChangeDelegate;
+	FOnPlayerLevelChanged LevelChangeDelegate;
 
 	void OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,
     	const FGameplayTag& InputSlotTag, const FGameplayTag& PrevInputSlotTag) const;
@@ -76,7 +77,7 @@ protected:
 	TObjectPtr<UDataTable> MessageDataTable;
 
 	void OnExpChange(int32 Exp);
-	void OnLevelChange(int32 Level);
+	void OnLevelChange(int32 Level, bool bIsLevelUp);
 };
 
 

@@ -12,7 +12,10 @@
 #include "UI/HUD/AuraHUD.h"
 #include "NiagaraComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Game/AuraGameModeBase.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
+
 AAuraCharacter::AAuraCharacter()
 {
 	// 움직임 같은 것은 최대한 BeginPlay에 넣자 --> Null이 아니더라도 초기화가 진행중에 덮어씌워질 수 있다.
@@ -80,6 +83,8 @@ void AAuraCharacter::OnRep_Burned()
 	
 }
 
+
+
 void AAuraCharacter::BeginPlay()
 {
     Super::BeginPlay();
@@ -114,10 +119,9 @@ void AAuraCharacter::InitAbilityActorInfo()
 			AuraHUD->InitOverlay(AuraPlayerController, AuraPlayerState, AbilitySystemComponent, AttributeSet);
 		}
 	}
-	
-	InitializeDefaultAttributes();
 
-	
+	// 이제는 디스크에 저장되어있는 것을 불러옴
+	// InitializeDefaultAttributes();
 }
 
 void AAuraCharacter::MulticastLevelUpParticles_Implementation() const
@@ -139,9 +143,59 @@ void AAuraCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
-	AddGameplayAbilities();
+
+	LoadProgress();
 }
 
+void AAuraCharacter::LoadProgress()
+{
+	AAuraGameModeBase* AuraGameMode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (AuraGameMode)
+	{
+		// 게임 인스턴스에 해당하는 세이브 슬롯 데이터를 가져옴
+		ULoadScreenSaveGame* SaveData = AuraGameMode->RetrieveInGameSaveData();
+		if (SaveData == nullptr) return;
+
+		// 캐릭터의 데이터들을 로드 
+		{
+			// 단 한번이라도 저장한 적이 있다면
+			if (SaveData->bFirstTimeSaved)
+			{
+				// Strength, Intelligence, Resilience, Vigor 을 SetByCaller로 로드
+				if (UAuraAttributeSet* AuraAttributeSet = Cast<UAuraAttributeSet>(GetAttributeSet()))
+				{
+					UAuraAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(this,AbilitySystemComponent,SaveData);
+					ApplyEffectToSelfInit(DefaultSecondaryAttributes, 1.f);
+					ApplyEffectToSelfInit(DefaultVitalAttributes, 1.f);
+				}
+				
+				// EXP, Level, SkillPoint, AttributePoint 를 로드 
+				if (AAuraPlayerState* AuraPlayerState = Cast<AAuraPlayerState>(GetPlayerState()))
+				{
+					AuraPlayerState->SetLevelWithLoad(SaveData->PlayerLevel);
+					AuraPlayerState->SetExp(SaveData->XP);
+					AuraPlayerState->SetAttributePoint(SaveData->AttributePoints);
+					AuraPlayerState->SetSkillPoint(SaveData->SpellPoints);
+				}
+
+				// Ability 로드
+				if (UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent))
+				{
+					AuraASC->AddCharacterAbilitiesFromSaveData(SaveData);
+					AuraASC->UpdateAbilityStatus(SaveData->PlayerLevel);
+				}
+			
+			}
+			
+			// 단 한번이라도 저장하지 않았음 << 처음 시작
+			else
+			{
+				InitializeDefaultAttributes();
+				AddGameplayAbilities();
+			}
+		}
+	}
+}
 //APawn 클래스에 정의된 RepNotify 함수
 //RepNotify 함수는 특정 변수가 서버에서 변경되어 클라이언트로 복제될 때 자동으로 호출되는 함수
 void AAuraCharacter::OnRep_PlayerState()
@@ -249,6 +303,69 @@ void AAuraCharacter::HideMagicCircle_Implementation()
 	if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
 	{
 		AuraPlayerController->HideMagicCircle();
+	}
+}
+
+// 플레이어가 체크포인트에 도달했을 때 호출
+void AAuraCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
+{
+	AAuraGameModeBase* AuraGameMode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (AuraGameMode)
+	{
+		// 게임 인스턴스에 해당하는 세이브 슬롯 데이터를 가져옴
+		ULoadScreenSaveGame* SaveData = AuraGameMode->RetrieveInGameSaveData();
+		if (SaveData == nullptr) return;
+
+		// 캐릭터의 데이터들을 저장 
+		{
+			// 세이브 슬롯 데이터의 PlayerStartTag를 바꿈
+			SaveData->PlayerStartTag = CheckpointTag;
+
+			// EXP, Level, SkillPoint, AttributePoint 를 저장 
+			if (AAuraPlayerState* AuraPlayerState = Cast<AAuraPlayerState>(GetPlayerState()))
+			{
+				SaveData->PlayerLevel = AuraPlayerState->GetPlayerLevel();
+				SaveData->XP = AuraPlayerState->GetExp();
+				SaveData->AttributePoints = AuraPlayerState->GetAttributePoint();
+				SaveData->SpellPoints = AuraPlayerState->GetSkillPoint();
+			}
+
+			// Strength, Intelligence, Resilience, Vigor 을 저장
+			SaveData->Strength = UAuraAttributeSet::GetStrengthAttribute().GetNumericValue(GetAttributeSet());
+			SaveData->Intelligence = UAuraAttributeSet::GetIntelligenceAttribute().GetNumericValue(GetAttributeSet());
+			SaveData->Resilience = UAuraAttributeSet::GetResilienceAttribute().GetNumericValue(GetAttributeSet());
+			SaveData->Vigor = UAuraAttributeSet::GetVigorAttribute().GetNumericValue(GetAttributeSet());
+
+			SaveData->bFirstTimeSaved = true;
+
+
+			// Ability 를 저장
+			if (!HasAuthority()) return;
+			SaveData->SavedAbilities.Empty();
+			
+			UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent);
+			FForEachAbility SaveAbilityDelegate;
+			SaveAbilityDelegate.BindLambda([this, &AuraASC, &SaveData] (const FGameplayAbilitySpec& AbilitySpec)
+			{
+				UAbilityInfo* AbilityInfo = UAuraAbilitySystemLibrary::GetAbilityInfo(this);
+				FGameplayTag AbilityTag = AuraASC->GetAbilityTagFromSpec(AbilitySpec);
+				FAuraAbilityInfo AuraAbilityInfo = AbilityInfo->FindAbilityInfoByTag(AbilityTag);
+
+				FSavedAbility SavedAbility;
+				SavedAbility.GameplayAbility = AuraAbilityInfo.Ability;
+				SavedAbility.AbilityTag = AbilityTag;
+				SavedAbility.AbilityLevel = AbilitySpec.Level;
+				SavedAbility.AbilitySlot = AuraASC->GetInputFromAbilityTag(AbilityTag);
+				SavedAbility.AbilityType = AuraAbilityInfo.AbilityType;
+				SavedAbility.AbilityStatus = AuraASC->GetStatusTagFromAbilityTag(AbilityTag);
+
+				SaveData->SavedAbilities.AddUnique(SavedAbility);
+			});
+			AuraASC->ForEachAbility(SaveAbilityDelegate);
+		}
+		
+		// 다시 세이브 슬롯 데이터를 저장
+		AuraGameMode->SaveInGameProgressData(SaveData);
 	}
 }
 

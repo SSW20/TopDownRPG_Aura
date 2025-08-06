@@ -65,7 +65,7 @@ void UAuraWidgetController::BindCallbacksToDependencies()
 // ASC를 통해 모든 GA를 본 뒤 InputTag를 가져와 AbilityInfo 데이터 에셋에서 정보를 추가하여 블루프린트에 BroadCast
 void UAuraWidgetController::BroadcastAbilityInfo()
 {
-	if (!GetAuraAbilitySystemComponent()->bIsStartUpAbilitiesBroadCasted) return;
+	if (!GetAuraAbilitySystemComponent()->bStartupAbilitiesGiven) return;
 	
 	// FForEachAbility 델리게이트 인스턴스를 생성
 	// 이 델리게이트는 UAuraAbilitySystemComponent::ForEachAbility 함수에 전달되어 각 활성화 가능한 어빌리티 스펙에 대해 실행될 콜백을 정의.

@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DeleteButtonPressed();
 
+	UFUNCTION(BlueprintCallable)
+	void CancelButtonPressed();
+
 	void LoadData();
 	
 	void SetNumLoadSlots(int32 InNumSlots);

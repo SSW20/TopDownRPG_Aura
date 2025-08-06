@@ -51,10 +51,38 @@ void UAuraAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGa
 		// 이는 다시 SpellMenuWidgetController의 AbilityStatusTagsDelegate를 호출
 		ClientUpdateStatus_Implementation(AbilityTag,Tags.Abilities_Status_Unlocked, AbilitySpec->Level);
 	}
-
-	
 }
+void UAuraAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData)
+{
+	for (const FSavedAbility& Data : SaveData->SavedAbilities)
+	{
+		const TSubclassOf<UGameplayAbility> LoadedAbilityClass = Data.GameplayAbility;
 
+		FGameplayAbilitySpec LoadedAbilitySpec = FGameplayAbilitySpec(LoadedAbilityClass, Data.AbilityLevel);
+
+		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilitySlot);
+		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilityStatus);
+		if (Data.AbilityType == FAuraGameplayTags::Get().Abilities_Type_Offensive)
+		{
+			GiveAbility(LoadedAbilitySpec);
+		}
+		else if (Data.AbilityType == FAuraGameplayTags::Get().Abilities_Type_Passive)
+		{
+			GiveAbility(LoadedAbilitySpec);
+			if (Data.AbilityStatus.MatchesTagExact(FAuraGameplayTags::Get().Abilities_Status_Equipped))
+			{
+				TryActivateAbility(LoadedAbilitySpec.Handle);
+				MulticastActivatePassiveEffect(Data.AbilityTag, true);
+			}
+			else
+			{
+				GiveAbility(LoadedAbilitySpec);
+			}
+		}
+	}
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast();
+}
 void UAuraAbilitySystemComponent::EffectApplied_Implementation(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayEffectSpec& EffectSpec, FActiveGameplayEffectHandle EffectHandle)
 {
 	FGameplayTagContainer TagContainer;
@@ -65,9 +93,10 @@ void UAuraAbilitySystemComponent::EffectApplied_Implementation(UAbilitySystemCom
 void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 {
 	Super::OnRep_ActivateAbilities();
-
-	if (!bIsStartUpAbilitiesBroadCasted)
+	
+	if (!bStartupAbilitiesGiven)
 	{
+		bStartupAbilitiesGiven = true;
 		AbilitiesGivenDelegate.Broadcast();
 	}
 }
@@ -103,9 +132,11 @@ void UAuraAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 					if (IsPassiveAbility(*PrevAbilitySpec))
 					{
 						// 슬롯에 있는 Passive Ability를 DeActive
-						DeactivatePassiveTagDelegate.Broadcast(GetAbilityTagFromSpec(*PrevAbilitySpec));
 						MulticastActivatePassiveEffect(PrevAbilityTag, false);
+						DeactivatePassiveTagDelegate.Broadcast(GetAbilityTagFromSpec(*PrevAbilitySpec));
 					}
+					PrevAbilitySpec->DynamicAbilityTags.RemoveTag(GetStatusTagFromSpec(*PrevAbilitySpec));
+					PrevAbilitySpec->DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Unlocked);
 
 					// 해당 Input Tag에 있는 Spec을 지움
 					ClearInputTagBySpec(PrevAbilitySpec);
@@ -125,6 +156,8 @@ void UAuraAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamep
 					TryActivateAbility(AbilitySpec->Handle);
 					MulticastActivatePassiveEffect(AbilityTag, true);
 				}
+				AbilitySpec->DynamicAbilityTags.RemoveTag(GetStatusTagFromSpec(*AbilitySpec));
+				AbilitySpec->DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
 			}
 			AssignSlotToAbility(*AbilitySpec, SlotInputTag);
 			MarkAbilitySpecDirty(*AbilitySpec);
@@ -231,7 +264,7 @@ void UAuraAbilitySystemComponent::AddGameplayAbilities(const TArray<TSubclassOf<
 			GiveAbility(AbilitySpec);
 		}
 	}
-	bIsStartUpAbilitiesBroadCasted = true;
+	bStartupAbilitiesGiven = true;
 	AbilitiesGivenDelegate.Broadcast();
 }
 
@@ -242,6 +275,7 @@ void UAuraAbilitySystemComponent::AddPassiveGameplayAbilities(
 	for (const TSubclassOf<UGameplayAbility> AbilityClass : PassiveGameplayAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
+		AbilitySpec.DynamicAbilityTags.AddTag(FAuraGameplayTags::Get().Abilities_Status_Equipped);
 		GiveAbilityAndActivateOnce(AbilitySpec);
 	}
 }

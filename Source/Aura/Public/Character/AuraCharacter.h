@@ -39,6 +39,7 @@ public:
 	virtual int32 GetAttributePoint_Implementation() const override;
 	virtual void ShowMagicCircle_Implementation(UMaterialInterface* Material = nullptr) override;
 	virtual void HideMagicCircle_Implementation() override;
+	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/*	End Player Interface */
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -46,6 +47,8 @@ public:
 
 	virtual void OnRep_Stunned() override;
 	virtual void OnRep_Burned() override;
+
+	void LoadProgress();
 protected:
 	virtual void BeginPlay() override;
 

@@ -46,7 +46,9 @@ public:
 	TSubclassOf<UGameplayEffect> SecondaryAttributes; 
 	UPROPERTY(EditDefaultsOnly, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TSubclassOf<UGameplayEffect> PrimaryAttribute_SetByCaller;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartAbilities;
 };

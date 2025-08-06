@@ -17,7 +17,7 @@ void UOverlayWidgetController::BroadcastInitialValues()
 	
 	AAuraPlayerState* AuraPS = GetAuraPlayerState();
 	AuraPS->ExpChangeDelegate.Broadcast(AuraPS->GetExp());
-	AuraPS->LevelChangeDelegate.Broadcast(AuraPS->GetPlayerLevel());
+	AuraPS->LevelChangeDelegate.Broadcast(AuraPS->GetPlayerLevel(), false);
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
@@ -26,7 +26,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	// 1. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되기 전에 바인드 됨
 	// 2. AuraASC에서 AbilitiesGivenDelegate가 BroadCast되고 난 뒤 바인드 됨
 	// 1번의 경우에는 적절하지만 2번의 경우는 문제가 생긴다 이미 BroadCast된 경우 바인드 하지 않고 콜백함수를 직접 호출하는 형식으로 변경
-	if (GetAuraAbilitySystemComponent()->bIsStartUpAbilitiesBroadCasted)
+	if (GetAuraAbilitySystemComponent()->bStartupAbilitiesGiven)
 	{
 		BroadcastAbilityInfo();
 	}
@@ -110,7 +110,7 @@ void UOverlayWidgetController::OnExpChange(int32 Exp)
 	}
 
 }
-void UOverlayWidgetController::OnLevelChange(int32 Level)
+void UOverlayWidgetController::OnLevelChange(int32 Level, bool bIsLevelUp)
 {
-	LevelChangeDelegate.Broadcast(Level);
+	LevelChangeDelegate.Broadcast(Level, bIsLevelUp);
 }

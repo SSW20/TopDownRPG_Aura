@@ -3,6 +3,7 @@
 
 #include "UI/ViewModel/MVVM_LoadScreen.h"
 
+#include "Game/AuraGameInstance.h"
 #include "Game/AuraGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -37,8 +38,16 @@ void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& NewName)
 		LoadSlots[Slot]->SetPlayerName(NewName);
 		LoadSlots[Slot]->SetMapName(AuraGameModeBase->DefaultMapName);
 		LoadSlots[Slot]->SlotStatus = Taken;
-
+		LoadSlots[Slot]->PlayerStartTag = AuraGameModeBase->DefaultPlayerStart;
+		LoadSlots[Slot]->SetPlayerLevel(1);
+		
 		AuraGameModeBase->SaveSlotData(LoadSlots[Slot], Slot);
+		
+		UAuraGameInstance* GameInstance = Cast<UAuraGameInstance>(AuraGameModeBase->GetGameInstance());
+		GameInstance->PlayerStartTag = AuraGameModeBase->DefaultPlayerStart;
+		GameInstance->LoadSlotIndex = LoadSlots[Slot]->SlotIndex;
+		GameInstance->LoadSlotName = LoadSlots[Slot]->GetSlotName();
+		
 	}
 	LoadSlots[Slot]->SetSwitcherIndex.Broadcast(LoadSlots[Slot]->SlotStatus);
 }
@@ -71,6 +80,12 @@ void UMVVM_LoadScreen::PlayButtonPressed()
 {
 	if (AAuraGameModeBase* AuraGameMode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(this)))
 	{
+		UAuraGameInstance* AuraGameInstance = Cast<UAuraGameInstance>(AuraGameMode->GetGameInstance());
+		AuraGameInstance->PlayerStartTag = SelectedSlot->PlayerStartTag;
+		AuraGameInstance->LoadSlotName = SelectedSlot->GetSlotName();
+		AuraGameInstance->LoadSlotIndex = SelectedSlot->SlotIndex;
+	
+		
 		AuraGameMode->TravelMap(SelectedSlot);
 	}
 }
@@ -83,6 +98,14 @@ void UMVVM_LoadScreen::DeleteButtonPressed()
 		SelectedSlot->SlotStatus = Vacant;
 		SelectedSlot->UpdateSlotData();
 		SelectedSlot->SetButtonEnable.Broadcast(true);
+	}
+}
+
+void UMVVM_LoadScreen::CancelButtonPressed()
+{
+	for (const TTuple<int32, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
+	{
+		LoadSlot.Value->SetButtonEnable.Broadcast(true);
 	}
 }
 
@@ -100,6 +123,8 @@ void UMVVM_LoadScreen::LoadData()
 		LoadSlot.Value->SlotStatus = SaveSlotStatus;
 		LoadSlot.Value->SetPlayerName(PlayerName);
 		LoadSlot.Value->SetMapName(MapName);
+		LoadSlot.Value->PlayerStartTag = SaveObject->PlayerStartTag;
+		LoadSlot.Value->SetPlayerLevel(SaveObject->PlayerLevel);
 		LoadSlot.Value->UpdateSlotData();
 	}
 }

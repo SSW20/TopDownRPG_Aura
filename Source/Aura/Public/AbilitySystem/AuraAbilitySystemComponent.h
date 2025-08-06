@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
+#include "Game/LoadScreenSaveGame.h"
 #include "AuraAbilitySystemComponent.generated.h"
 /**
  * 
@@ -36,9 +37,11 @@ public:
 	FAblityInfoTags AbilityInfoTagsDelegate;
 	FPassiveTag DeactivatePassiveTagDelegate;
 	FActivatePassive ActivatePassiveDelegate;
-	bool bIsStartUpAbilitiesBroadCasted = false;
+	
+	bool bStartupAbilitiesGiven = false;
 	
 	void AbilityActorInfoSet();
+	void AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData);
 	void AddGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& GameplayAbilities);
 	void AddPassiveGameplayAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassiveGameplayAbilities);
 	void ForEachAbility(const FForEachAbility& ForEachDelegate);
@@ -84,6 +87,8 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientEquipAbility(const FGameplayTag&  AbilityTag, const FGameplayTag& StatusTag, const FGameplayTag&  InputSlotTag, const FGameplayTag& PrevInputSlotTag);
+
+
 protected:
 
 	UFUNCTION(Client, Reliable)

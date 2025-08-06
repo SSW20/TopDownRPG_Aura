@@ -92,6 +92,27 @@ void UAuraAbilitySystemLibrary::InitDefaultAttributes(const UObject* WorldContex
 	FGameplayEffectSpecHandle VitalSpecHandle = ASC->MakeOutgoingSpec(CharacterInfo->VitalAttributes, Level, VitalContextHandle);
 	ASC->ApplyGameplayEffectSpecToSelf(*VitalSpecHandle.Data.Get());
 }
+void UAuraAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame)
+{
+	AAuraGameModeBase* AuraGamemode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	check(AuraGamemode);
+
+	UCharacterClassInfo* CharacterInfo = AuraGamemode->CharacterInfoClass;
+	if (CharacterInfo == nullptr) return;
+
+	const FAuraGameplayTags& GameplayTags = FAuraGameplayTags::Get();
+
+	const AActor* SourceAvatarActor = ASC->GetAvatarActor();
+	FGameplayEffectContextHandle EffectContexthandle = ASC->MakeEffectContext();
+	EffectContexthandle.AddSourceObject(SourceAvatarActor);
+
+	const FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(CharacterInfo->PrimaryAttribute_SetByCaller, 1.f, EffectContexthandle);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Strength, SaveGame->Strength);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Intelligence, SaveGame->Intelligence);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Resilience, SaveGame->Resilience);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Vigor, SaveGame->Vigor);
+	ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+}
 
 void UAuraAbilitySystemLibrary::InitDefaultAbilities(const UObject* WorldContext, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass)
 {

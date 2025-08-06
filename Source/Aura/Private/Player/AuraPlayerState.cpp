@@ -42,13 +42,19 @@ void AAuraPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AAuraPlayerState::SetLevel(int32 NewLevel)
 {
 	Level = NewLevel;
-	LevelChangeDelegate.Broadcast(Level);
+	LevelChangeDelegate.Broadcast(Level, true);
 }
 
 void AAuraPlayerState::AddToLevel(int32 NewLevel)
 {
 	Level += NewLevel;
-	LevelChangeDelegate.Broadcast(Level);
+	LevelChangeDelegate.Broadcast(Level, true);
+}
+
+void AAuraPlayerState::SetLevelWithLoad(int32 NewLevel)
+{
+	Level = NewLevel;
+	LevelChangeDelegate.Broadcast(Level, false);
 }
 
 void AAuraPlayerState::SetExp(int32 NewExp)
@@ -69,6 +75,18 @@ void AAuraPlayerState::AddAttributePoint(int32 NewAttributePoint)
 	AttributePointChangeDelegate.Broadcast(AttributePoint);
 }
 
+void AAuraPlayerState::SetAttributePoint(int32 NewAttributePoint)
+{
+	AttributePoint = NewAttributePoint;
+	AttributePointChangeDelegate.Broadcast(AttributePoint);
+}
+
+void AAuraPlayerState::SetSkillPoint(int32 NewSkillPoint)
+{
+	SkillPoint = NewSkillPoint;
+	SkillPointChangeDelegate.Broadcast(SkillPoint);
+}
+
 void AAuraPlayerState::AddSkillPoint(int32 NewSkillPoint)
 {
 	SkillPoint += NewSkillPoint;
@@ -77,7 +95,7 @@ void AAuraPlayerState::AddSkillPoint(int32 NewSkillPoint)
 
 void AAuraPlayerState::OnRep_Level(int32 OldLevel)
 {
-	LevelChangeDelegate.Broadcast(Level);
+	LevelChangeDelegate.Broadcast(Level, true);
 }
 
 void AAuraPlayerState::OnRep_Exp(int32 OldExp)

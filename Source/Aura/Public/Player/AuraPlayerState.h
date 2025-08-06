@@ -15,6 +15,7 @@ class UAttributeSet;
  * 
  */
 DECLARE_MULTICAST_DELEGATE_OneParam(FPlayerStatChange, int32);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FPlayerLevelChange, int32, bool);
 
 UCLASS()
 class AURA_API AAuraPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -31,7 +32,8 @@ public:
 	FORCEINLINE int32 GetPlayerLevel() const { return Level; };
 	void SetLevel(int32 NewLevel);
 	void AddToLevel(int32 NewLevel);
-	FPlayerStatChange LevelChangeDelegate;
+	void SetLevelWithLoad(int32 NewLevel);
+	FPlayerLevelChange LevelChangeDelegate;
 
 	/*		Exp		*/
 	void SetExp(int32 NewExp);
@@ -43,14 +45,18 @@ public:
 	FPlayerStatChange AttributePointChangeDelegate;
 	FORCEINLINE int32 GetAttributePoint() const { return AttributePoint; };
 	void AddAttributePoint(int32 NewAttributePoint);
+	void SetAttributePoint(int32 NewAttributePoint);
 
 	/*		SkillPoint			*/
 	FPlayerStatChange SkillPointChangeDelegate;
 	FORCEINLINE int32 GetSkillPoint() const { return SkillPoint; };
 	void AddSkillPoint(int32 NewSkillPoint);
+	void SetSkillPoint(int32 NewSkillPoint);
 	
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<ULevelUpInfo> LevelUpInfo;
+
+	
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
