@@ -47,7 +47,7 @@ void AAuraEffectActor::OnOverlap(AActor* TargetActor)
 {
 	
 	if (TargetActor->ActorHasTag(FName("Enemy")) && !bApplyEffectToEnemies) return;
-
+	
 	if (InstantEffectApplicationPolicy == EEffectApplicationPolicy::ApplyOnOverlap)
 	{
 		ApplyEffectToTarget(TargetActor, InstantGameplayEffectClass);

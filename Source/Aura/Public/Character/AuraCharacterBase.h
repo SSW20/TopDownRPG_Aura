@@ -11,6 +11,7 @@
 #include "Interaction/CombatInterface.h"
 #include "UI/Widget/FloatingDamageText.h"
 #include "Abilities/GameplayAbility.h"
+#include "AbilitySystem/Data/LootTiers.h"
 #include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 #include "AbilitySystem/Passive/PassiveNiagaraComponent.h"
 #include "AuraCharacterBase.generated.h"
@@ -180,6 +181,8 @@ protected:
 
 	// Take Damage Override
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	
 };
 
 inline void AAuraCharacterBase::OnRep_Stunned()

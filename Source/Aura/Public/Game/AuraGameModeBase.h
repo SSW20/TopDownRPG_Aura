@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "AbilitySystem/Data/LootTiers.h"
 #include "UI/ViewModel/MVVM_LoadSlot.h"
 #include "AuraGameModeBase.generated.h"
 class USaveGame;
@@ -34,7 +35,10 @@ public:
 	TSubclassOf<USaveGame> LoadScreenSaveGameClass;
 	
 	UPROPERTY(EditDefaultsOnly)
-	FString DefaultMapName;
+	FString DefaultMapName = "Dungeon 1";
+
+	UPROPERTY(EditDefaultsOnly)
+	FString DefaultMapAssetName = "StartMap";
 
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> DefaultMap;
@@ -45,9 +49,15 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FName DefaultPlayerStart;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Loot Tiers")
+	TObjectPtr<ULootTiers> LootTiers;
+
 	ULoadScreenSaveGame* RetrieveInGameSaveData();
 	void SaveInGameProgressData(ULoadScreenSaveGame* SaveObject);
-	
+	FString GetMapNameFromMapAssetName(const FString& MapAssetName) const;
+	void SaveWorldState(UWorld* World, const FString& DestinationMapAssetName = FString("")) const;
+	void LoadWorldState(UWorld* World) const;
+	void PlayerDied(ACharacter* Player);
 protected:
 	virtual void BeginPlay() override;
 

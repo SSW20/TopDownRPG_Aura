@@ -6,12 +6,8 @@
 #include "Character/AuraCharacter.h"
 #include "Interaction/EnemyInterface.h"
 #include "Components/WidgetComponent.h"
-#include "UI/Widget/AuraUserWidget.h"
-#include "UI/WidgetController/AuraWidgetController.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
-#include "UI/Widget/FloatingDamageText.h"
-#include "GameplayEffect.h"
-#include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "Interaction/HighlightInterface.h"
 #include "AuraEnemy.generated.h"
 
 class AAuraAIController;
@@ -20,17 +16,20 @@ class AAuraAIController;
  */
 class UBehaviorTree;
 UCLASS()
-class AURA_API AAuraEnemy : public AAuraCharacterBase, public IEnemyInterface
+class AURA_API AAuraEnemy : public AAuraCharacterBase, public IEnemyInterface, public IHighlightInterface
 {
 	GENERATED_BODY()
 
 public:
 	AAuraEnemy();
 public:
+	/** Highlight Interface */
+	virtual void HighlightActor_Implementation() override;
+	virtual void UnHighlightActor_Implementation() override;
+	virtual void SetMoveToLocation_Implementation(FVector& OutDestination) override;
+	/** End Highlight Interface */
 	
 	// Start Enemy Interface
-	virtual void HighlightActor() override;
-	virtual void UnHighlightActor() override;
 	virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
 	virtual AActor* GetCombatTarget_Implementation() const override;
 	// End Enemy Interface
@@ -41,8 +40,11 @@ public:
 	// Start Combat Interface
 	virtual int32 GetPlayerLevel_Implementation() const override;
 	virtual void SetIsShocking_Implementation(bool IsShocking) override;
-
 	// End Combat Interface
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SpawnLoot();
+	
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnHealthChanged;
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
@@ -53,8 +55,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bIsReacting = false;
 
-
-
+	void SetLevel(const int32 InLevel) {Level = InLevel;}
+	void SetCharacterClass(const ECharacterClass InClass) { CharacterClass = InClass; }
+	
 	virtual void PossessedBy(AController* NewController) override;
 protected:
 	virtual void BeginPlay() override;

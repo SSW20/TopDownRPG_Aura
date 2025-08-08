@@ -31,7 +31,21 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 	AutoRun();
 	MagicCircleTrace();
 }
+void AAuraPlayerController::HighlightActor(AActor* InActor)
+{
+	if (IsValid(InActor) && InActor->Implements<UHighlightInterface>())
+	{
+		IHighlightInterface::Execute_HighlightActor(InActor);
+	}
+}
 
+void AAuraPlayerController::UnHighlightActor(AActor* InActor)
+{
+	if (IsValid(InActor) && InActor->Implements<UHighlightInterface>())
+	{
+		IHighlightInterface::Execute_UnHighlightActor(InActor);
+	}
+}
 void AAuraPlayerController::ShowDamageNumber_Implementation(float Damage, ACharacter* TargetCharacter, bool bIsBlocked, bool bIsCritHit)
 {
 	if (IsValid(TargetCharacter) && DamageTextClass && IsLocalController())
@@ -52,8 +66,9 @@ void AAuraPlayerController::CursorTrace()
 	// Player Block CursorTrace를 가지고 있을 시 Cursor Trace를 하지 않음
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_CursorTrace))
 	{
-		if (LastActor) LastActor->UnHighlightActor();
-		if (ThisActor) ThisActor->UnHighlightActor();
+		UnHighlightActor(LastActor);
+		UnHighlightActor(ThisActor);
+		if (IsValid(ThisActor) && ThisActor->Implements<UHighlightInterface>())
 		LastActor = nullptr;
 		ThisActor = nullptr;
 		return;
@@ -90,7 +105,7 @@ void AAuraPlayerController::CursorTrace()
 		{
 			// 상황 B
 			// Highlight ThisActor
-			ThisActor->HighlightActor();
+			HighlightActor(ThisActor);
 		}
 	}
 	else
@@ -99,7 +114,7 @@ void AAuraPlayerController::CursorTrace()
 		{
 			//	상황 C 
 			//	UnHighlight LastActor
-			LastActor->UnHighlightActor();
+			UnHighlightActor(LastActor);
 		}
 		else 
 		{
@@ -107,8 +122,8 @@ void AAuraPlayerController::CursorTrace()
 			{
 				//상황 D.1
 				//UnHighlight LastActor + Highlight ThisActor
-				LastActor->UnHighlightActor();
-				ThisActor->HighlightActor();
+				UnHighlightActor(LastActor);
+				HighlightActor(ThisActor);
 			}
 			else
 			{
@@ -128,8 +143,15 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	//GEngine->AddOnScreenDebugMessage(1, 3.f, FColor::Red, FString::Printf(TEXT("Pressed: %s"), *InputTag.ToString()));
 	if(FAuraGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
-		bTargeting = ThisActor ? true : false;
-		bAutoRunning = false;
+		if (IsValid(ThisActor))
+		{
+			TargetingStatus = ThisActor->Implements<UEnemyInterface>() ? ETargetingStatus::TargetingEnemy : ETargetingStatus::TargetingNonEnemy;
+			bAutoRunning = false;
+		}
+		else
+		{
+			TargetingStatus = ETargetingStatus::NotTargeting;
+		}
 	}
 	if (GetASC()) GetASC()->PlayIfPressed(InputTag);
 }
@@ -145,15 +167,25 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 		GetASC()->PlayIfReleased(InputTag);
 		return;
 	}
-	if (bTargeting || bIsShiftPressed)
-	{
-		GetASC()->PlayIfReleased(InputTag);
-	}
-	else
+	if (TargetingStatus != ETargetingStatus::TargetingEnemy && !bIsShiftPressed)
 	{
 		APawn* PlayerPawn = GetPawn();
 		if (FollowTime <= ShortPressThreshold && PlayerPawn)
 		{
+			// 하이라이트 된 쪽으로 가긴 가는데 이펙트를 나오게 할까 말까?
+
+			// 나오게 하고 싶지 않음 << 하이라이트 액터가 있을  때
+			if (IsValid(ThisActor) && ThisActor->Implements<UHighlightInterface>())
+			{
+				IHighlightInterface::Execute_SetMoveToLocation(ThisActor, CachedDestination);
+			}
+			// 입력 블럭이 아니면 나오게
+			else if (GetASC() && !GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem, CachedDestination);
+			}
+
+			
 			if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, PlayerPawn->GetActorLocation(), CachedDestination))
 			{
 				Spline->ClearSplinePoints();
@@ -167,14 +199,11 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				}
 			}
 			bAutoRunning = true;
-			if (GetASC() && !GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
-			{
-				// 추적 후 제일 마지막 위치에서 Spawn
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem,CachedDestination);
-			}
+			
 			
 		}
 		FollowTime = 0.f;
+		TargetingStatus = ETargetingStatus::NotTargeting;
 	}
 }
 
@@ -189,7 +218,7 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		GetASC()->PlayIfHeld(InputTag);
 		return;
 	}
-	if (bTargeting || bIsShiftPressed)
+	if (TargetingStatus == ETargetingStatus::TargetingEnemy || bIsShiftPressed)
 	{
 		GetASC()->PlayIfHeld(InputTag);
 	}

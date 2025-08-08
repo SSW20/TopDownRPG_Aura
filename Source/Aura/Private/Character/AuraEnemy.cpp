@@ -34,10 +34,16 @@ AAuraEnemy::AAuraEnemy()
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
+	GetMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
+	GetMesh()->MarkRenderStateDirty();
+	Weapon->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
+	Weapon->MarkRenderStateDirty();
+	
 	MoveSpeed = 250.f;
 	
 }
-void AAuraEnemy::HighlightActor()
+
+void AAuraEnemy::HighlightActor_Implementation()
 {
 	//포스트 프로세싱 볼륨 : 그림판 전체에 적용하는 필터
 	//						최종 렌더링된 화면의 픽셀 색상을 받아서, 우리가 정의한 Material의 로직에 따라 색상을 변형하거나 새로운 효과를 추가
@@ -49,10 +55,15 @@ void AAuraEnemy::HighlightActor()
 	Weapon->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
 }
 
-void AAuraEnemy::UnHighlightActor()
+void AAuraEnemy::UnHighlightActor_Implementation()
 {
 	GetMesh()->SetRenderCustomDepth(false);
 	Weapon->SetRenderCustomDepth(false);
+}
+
+void AAuraEnemy::SetMoveToLocation_Implementation(FVector& OutDestination)
+{
+	// 아무것도 하지 않음
 }
 
 int32 AAuraEnemy::GetPlayerLevel_Implementation() const
@@ -183,5 +194,6 @@ void AAuraEnemy::Die(const FVector& DeathImpulseVector)
 {
 	SetLifeSpan(LifeSpan);
 	if(AIController) AIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+	SpawnLoot();
 	Super::Die(DeathImpulseVector);
 }

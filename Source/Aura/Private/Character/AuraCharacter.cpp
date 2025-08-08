@@ -145,6 +145,11 @@ void AAuraCharacter::PossessedBy(AController* NewController)
 	InitAbilityActorInfo();
 
 	LoadProgress();
+
+	if (AAuraGameModeBase* AuraGameMode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		AuraGameMode->LoadWorldState(GetWorld());
+	}
 }
 
 void AAuraCharacter::LoadProgress()
@@ -210,6 +215,24 @@ int32 AAuraCharacter::GetPlayerLevel_Implementation() const
 	AAuraPlayerState* AuraPlayerState = GetPlayerState<AAuraPlayerState>();
 	check(AuraPlayerState);
 	return AuraPlayerState->GetPlayerLevel();
+}
+
+void AAuraCharacter::Die(const FVector& DeathImpuseVector)
+{
+	Super::Die(DeathImpuseVector);
+
+	// 죽고 나서 5초 후에 돌아옴
+	FTimerDelegate DeathTimerDelegate;
+	DeathTimerDelegate.BindLambda([this]()
+	{
+		AAuraGameModeBase* AuraGM = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(this));
+		if (AuraGM)
+		{
+			AuraGM->PlayerDied(this);
+		}
+	});
+	GetWorldTimerManager().SetTimer(DeathTimer, DeathTimerDelegate, DeathTime, false);
+	TopDownCameraComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 }
 
 void AAuraCharacter::AddExp_Implementation(int32 Exp)
@@ -318,7 +341,7 @@ void AAuraCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
 
 		// 캐릭터의 데이터들을 저장 
 		{
-			// 세이브 슬롯 데이터의 PlayerStartTag를 바꿈
+			// 세이브 슬롯 데이터의 PlayerStartTag, 시작 위치를 바꿈
 			SaveData->PlayerStartTag = CheckpointTag;
 
 			// EXP, Level, SkillPoint, AttributePoint 를 저장 

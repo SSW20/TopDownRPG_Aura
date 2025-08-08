@@ -6,6 +6,7 @@
 #include "AuraAbilityTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "Data/LootTiers.h"
 #include "Game/LoadScreenSaveGame.h"
 #include "UI/HUD/AuraHUD.h"
 #include "AuraAbilitySystemLibrary.generated.h"
@@ -153,5 +154,7 @@ public:
 	UFUNCTION(BlueprintPure,  Category = "AuraAbilitySystemLibrary|GameplayMechanics")
 	static TArray<FVector> GetEvenlySpreadVectors(const FVector& Forward, const FVector& Axis, float Spread, float ProjectileCount);
 
-	
+	// Loot Tier
+	UFUNCTION(BlueprintCallable, Category="AuraAbilitySystemLibrary|CharacterClassDefaults", meta = (DefaultToSelf = "WorldContextObject"))
+	static ULootTiers* GetLootTiers(const UObject* WorldContextObject);
 };

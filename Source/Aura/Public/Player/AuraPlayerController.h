@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "NiagaraSystem.h"
 #include "Actor/MagicCircle.h"
+#include "Interaction/HighlightInterface.h"
 #include "AuraPlayerController.generated.h"
 
 class UFloatingDamageText;
@@ -19,6 +20,16 @@ class UAuraAbilitySystemComponent;
 /**
  * 
  */
+// TargetingEnemy : 적 조준
+// TargetingNonEnemy : 적이 아닌 것 (포탈, 체크포인트 등)을 조준
+// NotTargeting : 조준하고 있지 않음
+enum class ETargetingStatus : uint8
+{
+	TargetingEnemy,
+	TargetingNonEnemy,
+	NotTargeting
+};
+
 
 UCLASS()
 class AURA_API AAuraPlayerController : public APlayerController
@@ -66,8 +77,13 @@ private:
 
 	void CursorTrace();
 
-	TScriptInterface<IEnemyInterface> LastActor;
-	TScriptInterface<IEnemyInterface> ThisActor;
+	TObjectPtr<AActor> LastActor;
+	TObjectPtr<AActor> ThisActor;
+
+	static void HighlightActor(AActor* InActor);
+	static void UnHighlightActor(AActor* InActor);
+
+	ETargetingStatus TargetingStatus = ETargetingStatus::NotTargeting;
 
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);

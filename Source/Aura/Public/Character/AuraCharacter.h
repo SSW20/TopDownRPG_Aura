@@ -23,6 +23,12 @@ public:
 
 	/*	Combat Interface */
 	virtual int32 GetPlayerLevel_Implementation() const override;
+	virtual void Die(const FVector& DeathImpuseVector) override;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DeathTime = 5.f;
+
+	FTimerHandle DeathTimer;
 	/*	End Combat Interface */
 	
 	/*	Player Interface */

@@ -353,6 +353,13 @@ TArray<FVector> UAuraAbilitySystemLibrary::GetEvenlySpreadVectors(const FVector&
 	return Rotators;
 }
 
+ULootTiers* UAuraAbilitySystemLibrary::GetLootTiers(const UObject* WorldContextObject)
+{
+	const AAuraGameModeBase* AuraGameMode = Cast<AAuraGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (AuraGameMode == nullptr) return nullptr;
+	return AuraGameMode->LootTiers;
+}
+
 
 bool UAuraAbilitySystemLibrary::IsDebuffSuccess(const FGameplayEffectContextHandle& EffectContextHandle)
 {
