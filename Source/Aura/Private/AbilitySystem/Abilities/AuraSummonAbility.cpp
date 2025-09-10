@@ -28,9 +28,11 @@ TArray<FVector> UAuraSummonAbility::GetSpawnLocations()
 		{
 			SummonLocation = SummonHit.ImpactPoint;
 		}
-		SummonLocations.Add(SummonLocation);
+		FVector DeltaSummonLocation = FVector(0,0,50.f);
+		
+		SummonLocations.Add(SummonLocation + DeltaSummonLocation);
 	}
-	return SummonLocations;
+	return SummonLocations; 
 }
 
 TSubclassOf<APawn> UAuraSummonAbility::GetRandomSummonPawn() const
